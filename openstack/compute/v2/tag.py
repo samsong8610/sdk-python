@@ -10,78 +10,124 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from openstack.compute import compute_service
-from openstack import resource2 as resource
-from openstack import exceptions
+import six
 
-class Tag(resource.Resource):
-    base_path = 'servers/%(server)s/tags'
+from keystoneauth1 import exceptions
+from openstack import utils
 
-    service = compute_service.ComputeService()
 
-    # capabilities
-    allow_get = True
-    allow_delete = True
-    allow_create = True
+class TagMixin(object):
 
-    put_create = True
-    server = resource.URI('server')
-    tag = resource.URI('tag')
-    tags = resource.Body('tags')
+    def _tag(self, method, key=None, delete=False, tags=None, session=None):
+        if tags:
+            for v in tags:
+                if not isinstance(v, six.string_types):
+                    raise ValueError("The value for %s must be "
+                                     "a text string" % v)
 
-    def create(self, session, prepend_key=True):
-        """Create a remote resource based on this instance.
+        # If we're in a ServerDetail, we need to pop the "detail" portion
+        # of the URL off and then everything else will work the same.
+        pos = self.base_path.find("detail")
+        if pos != -1:
+            base = self.base_path[:pos]
+        else:
+            base = self.base_path
 
-        :param session: The session to use for making this request.
-        :type session: :class:`~openstack.session.Session`
-        :param prepend_key: A boolean indicating whether the resource_key
-                            should be prepended in a resource creation
-                            request. Default to True.
+        if key is not None:
+            url = utils.urljoin(base, self.id, "tags", key)
+        else:
+            url = utils.urljoin(base, self.id, "tags")
 
-        :return: This :class:`Resource` instance.
-        :raises: :exc:`~openstack.exceptions.MethodNotSupported` if
-                 :data:`Resource.allow_create` is not set to ``True``.
-        """
-        if not self.allow_create:
-            raise exceptions.MethodNotSupported(self, "create")
-
+        endpoint_filter = self.get_endpoint_filter(self, session)
         endpoint_override = self.service.get_endpoint_override()
-        if self.put_create:
-            # create tag do not need requires_id
-            request = self._prepare_request(requires_id=False,
-                                            prepend_key=prepend_key)
-            response = session.put(request.uri, endpoint_filter=self.service,
-                                   endpoint_override=endpoint_override,
-                                   json=request.body, headers=request.headers)
-        self._translate_response(response)
-        return self
+        kwargs = {"endpoint_filter": endpoint_filter,
+                  "microversion": endpoint_filter.microversion,
+                  "endpoint_override": endpoint_override}
+        if tags:
+            kwargs["json"] = {'tags': tags}
+        headers = {"Accept": ""} if delete else {}
 
-    def delete(self, session, params=None, has_body=False):
-        """Delete the remote resource based on this instance.
+        response = method(url, headers=headers, **kwargs)
 
-        :param session: The session to use for making this request.
+        # DELETE doesn't return a JSON body
+        # PUT a special tag doesn't return a JSON body
+        return response.json() if not delete and key is None else None
+
+    def list_tags(self, session):
+        """List all tags of the server
+
+        :param session: The session to use for this request.
         :type session: :class:`~openstack.session.Session`
-        :param params: http params to be sent
-        :param bool has_body: should mapping response body to resource
 
-        :return: This :class:`Resource` instance.
-        :raises: :exc:`~openstack.exceptions.MethodNotSupported` if
-                 :data:`Resource.allow_update` is not set to ``True``.
+        :returns: A list of the requested tags. All tags are Unicode text.
+        :rtype: list
         """
-        if not self.allow_delete:
-            raise exceptions.MethodNotSupported(self, "delete")
-        # delete tag do not need requires_id
-        request = self._prepare_request(requires_id=False)
+        result = self._tag(session.get, session=session)
+        return result['tags']
 
-        endpoint_override = self.service.get_endpoint_override()
-        response = session.delete(request.uri, endpoint_filter=self.service,
-                                  endpoint_override=endpoint_override,
-                                  headers={"Accept": ""},
-                                  params=params)
+    def set_tags(self, session, *tags):
+        """Replace all tags of the server with the new set of tags
 
-        self._translate_response(response, has_body=has_body)
-        return self
+        :param session: The session to use for this request.
+        :type session: :class:`~openstack.session.Session`
+        :param args tags: A list of tags.
 
+        :returns: A list of the tags after being updated.
+        :rtype: list
+        """
+        if not tags:
+            return list()
 
-class TagAction(Tag):
-    base_path = 'servers/%(server)s/tags/%(tag)s'
+        result = self._tag(session.put, tags=list(tags), session=session)
+        return result['tags']
+
+    def delete_tags(self, session):
+        """Delete all tags from the server
+
+        :param session: The session to use for this request.
+        :type session: :class:`~openstack.session.Session`
+
+        :rtype: ``None``
+        """
+        self._tag(session.delete, delete=True, session=session)
+
+    def has_tag(self, session, tag):
+        """Checks tag existence on the server
+
+        :param session: The session to use for this request.
+        :type session: :class:`~openstack.session.Session`
+        :param str tag: The tag to check.
+
+        :returns: ``True`` if the tag existed, otherwise ``False``.
+        :rtype: bool
+        """
+        if not tag:
+            return False
+
+        try:
+            self._tag(session.get, key=tag, session=session)
+            return True
+        except exceptions.NotFound:
+            return False
+
+    def add_tag(self, session, tag):
+        """Add a single tag to the server
+
+        :param session: The session to use for this request.
+        :type session: :class:`~openstack.session.Session`
+        :param str tag: The tag to add.
+
+        :rtype: ``None``
+        """
+        self._tag(session.put, key=tag, session=session)
+
+    def delete_tag(self, session, tag):
+        """Deletes a single tag from the server
+
+        :param session: The session to use for this request.
+        :type session: :class:`~openstack.session.Session`
+        :param str tag: The tag to delete.
+
+        :rtype: ``None``
+        """
+        self._tag(session.delete, key=tag, delete=True, session=session)

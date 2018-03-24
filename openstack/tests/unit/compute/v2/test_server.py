@@ -20,40 +20,57 @@ EXAMPLE = {
     'accessIPv4': '1',
     'accessIPv6': '2',
     'addresses': {'region': '3'},
+    'adminPass': '27',
+    'OS-EXT-AZ:availability_zone': '19',
+    'block_device_mapping_v2': {'key': '29'},
     'config_drive': True,
     'created': '2015-03-09T12:14:57.233772',
+    'description': 'description about server',
+    'OS-DCF:diskConfig': '18',
+    'fault': {
+        'message': 'message',
+        'code': 1,
+        'details': '',
+        'created': '20180420T00:00:00Z'
+    },
     'flavorRef': '5',
     'flavor': {'id': 'FLAVOR_ID', 'links': {}},
     'hostId': '6',
+    'OS-EXT-SRV-ATTR:host': 'node1',
+    'OS-EXT-SRV-ATTR:hostname': 'host1',
+    'host_status': 'UP',
+    'OS-EXT-SRV-ATTR:hypervisor_hostname': 'hypervisor.example.com',
     'id': IDENTIFIER,
     'imageRef': '8',
     'image': {'id': 'IMAGE_ID', 'links': {}},
+    'OS-EXT-SRV-ATTR:instance_name': 'instance-00000001',
+    'OS-EXT-SRV-ATTR:kernel_id': '',
+    'key_name': '17',
+    'OS-SRV-USG:launched_at': '2015-03-09T12:15:57.233772',
+    'OS-EXT-SRV-ATTR:launch_index': 0,
     'links': '9',
+    'locked': True,
     'metadata': {'key': '10'},
     'networks': 'auto',
     'name': '11',
+    'personality': '28',
+    'OS-EXT-STS:power_state': '20',
     'progress': 12,
     'tenant_id': '13',
-    'status': '14',
-    'updated': '2015-03-09T12:15:57.233772',
-    'user_id': '16',
-    'key_name': '17',
-    'OS-DCF:diskConfig': '18',
-    'OS-EXT-AZ:availability_zone': '19',
-    'OS-EXT-STS:power_state': '20',
-    'OS-EXT-STS:task_state': '21',
-    'OS-EXT-STS:vm_state': '22',
-    'os-extended-volumes:volumes_attached': '23',
-    'OS-SRV-USG:launched_at': '2015-03-09T12:15:57.233772',
-    'OS-SRV-USG:terminated_at': '2015-03-09T12:15:57.233772',
-    'security_groups': '26',
-    'adminPass': '27',
-    'personality': '28',
-    'block_device_mapping_v2': {'key': '29'},
-    'OS-EXT-SRV-ATTR:hypervisor_hostname': 'hypervisor.example.com',
-    'OS-EXT-SRV-ATTR:instance_name': 'instance-00000001',
+    'OS-EXT-SRV-ATTR:ramdisk_id': '',
+    'OS-EXT-SRV-ATTR:reservation_id': 'r-0j5tsq1q',
+    'OS-EXT-SRV-ATTR:root_device_name': '/dev/sda',
     'os:scheduler_hints': {'key': '30'},
-    'OS-EXT-SRV-ATTR:user_data': '31'
+    'security_groups': '26',
+    'status': '14',
+    'tags': ["name.hostA", "time.12h"],
+    'OS-EXT-STS:task_state': '21',
+    'OS-SRV-USG:terminated_at': '2015-03-09T12:15:57.233772',
+    'updated': '2015-03-09T12:15:57.233772',
+    'OS-EXT-SRV-ATTR:user_data': '31',
+    'user_id': '16',
+    'OS-EXT-STS:vm_state': '22',
+    'os-extended-volumes:volumes_attached': '23'
 }
 
 
@@ -107,47 +124,62 @@ class TestServer(testtools.TestCase):
         self.assertEqual(EXAMPLE['accessIPv4'], sot.access_ipv4)
         self.assertEqual(EXAMPLE['accessIPv6'], sot.access_ipv6)
         self.assertEqual(EXAMPLE['addresses'], sot.addresses)
+        self.assertEqual(EXAMPLE['adminPass'], sot.admin_password)
+        self.assertEqual(EXAMPLE['OS-EXT-AZ:availability_zone'],
+                         sot.availability_zone)
+        self.assertEqual(EXAMPLE['block_device_mapping_v2'],
+                         sot.block_device_mapping)
         self.assertEqual(EXAMPLE['created'], sot.created_at)
         self.assertEqual(EXAMPLE['config_drive'], sot.has_config_drive)
+        self.assertEqual(EXAMPLE['description'], sot.description)
+        self.assertEqual(EXAMPLE['OS-DCF:diskConfig'], sot.disk_config)
+        self.assertEqual(EXAMPLE['fault'], sot.fault)
         self.assertEqual(EXAMPLE['flavorRef'], sot.flavor_id)
         self.assertEqual(EXAMPLE['flavor'], sot.flavor)
         self.assertEqual(EXAMPLE['hostId'], sot.host_id)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:host'], sot.host)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:hostname'], sot.hostname)
+        self.assertEqual(EXAMPLE['host_status'], sot.host_status)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:hypervisor_hostname'],
+                         sot.hypervisor_hostname)
         self.assertEqual(EXAMPLE['id'], sot.id)
         self.assertEqual(EXAMPLE['imageRef'], sot.image_id)
         self.assertEqual(EXAMPLE['image'], sot.image)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:instance_name'],
+                         sot.instance_name)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:kernel_id'], sot.kernel_id)
+        self.assertEqual(EXAMPLE['key_name'], sot.key_name)
+        self.assertEqual(EXAMPLE['OS-SRV-USG:launched_at'], sot.launched_at)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:launch_index'],
+                         sot.launch_index)
         self.assertEqual(EXAMPLE['links'], sot.links)
+        self.assertEqual(EXAMPLE['locked'], sot.is_locked)
         self.assertEqual(EXAMPLE['metadata'], sot.metadata)
         self.assertEqual(EXAMPLE['networks'], sot.networks)
         self.assertEqual(EXAMPLE['name'], sot.name)
-        self.assertEqual(EXAMPLE['progress'], sot.progress)
-        self.assertEqual(EXAMPLE['tenant_id'], sot.project_id)
-        self.assertEqual(EXAMPLE['status'], sot.status)
-        self.assertEqual(EXAMPLE['updated'], sot.updated_at)
-        self.assertEqual(EXAMPLE['user_id'], sot.user_id)
-        self.assertEqual(EXAMPLE['key_name'], sot.key_name)
-        self.assertEqual(EXAMPLE['OS-DCF:diskConfig'], sot.disk_config)
-        self.assertEqual(EXAMPLE['OS-EXT-AZ:availability_zone'],
-                         sot.availability_zone)
+        self.assertEqual(EXAMPLE['personality'], sot.personality)
         self.assertEqual(EXAMPLE['OS-EXT-STS:power_state'], sot.power_state)
+        self.assertEqual(EXAMPLE['progress'], sot.progress)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:ramdisk_id'], sot.ramdisk_id)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:reservation_id'],
+                         sot.reservation_id)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:root_device_name'],
+                         sot.root_device_name)
+        self.assertEqual(EXAMPLE['os:scheduler_hints'],
+                         sot.scheduler_hints)
+        self.assertEqual(EXAMPLE['security_groups'], sot.security_groups)
+        self.assertEqual(EXAMPLE['status'], sot.status)
+        self.assertItemsEqual(EXAMPLE['tags'], sot.tags)
         self.assertEqual(EXAMPLE['OS-EXT-STS:task_state'], sot.task_state)
+        self.assertEqual(EXAMPLE['tenant_id'], sot.project_id)
+        self.assertEqual(EXAMPLE['OS-SRV-USG:terminated_at'],
+                         sot.terminated_at)
+        self.assertEqual(EXAMPLE['updated'], sot.updated_at)
+        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:user_data'], sot.user_data)
+        self.assertEqual(EXAMPLE['user_id'], sot.user_id)
         self.assertEqual(EXAMPLE['OS-EXT-STS:vm_state'], sot.vm_state)
         self.assertEqual(EXAMPLE['os-extended-volumes:volumes_attached'],
                          sot.attached_volumes)
-        self.assertEqual(EXAMPLE['OS-SRV-USG:launched_at'], sot.launched_at)
-        self.assertEqual(EXAMPLE['OS-SRV-USG:terminated_at'],
-                         sot.terminated_at)
-        self.assertEqual(EXAMPLE['security_groups'], sot.security_groups)
-        self.assertEqual(EXAMPLE['adminPass'], sot.admin_password)
-        self.assertEqual(EXAMPLE['personality'], sot.personality)
-        self.assertEqual(EXAMPLE['block_device_mapping_v2'],
-                         sot.block_device_mapping)
-        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:hypervisor_hostname'],
-                         sot.hypervisor_hostname)
-        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:instance_name'],
-                         sot.instance_name)
-        self.assertEqual(EXAMPLE['os:scheduler_hints'],
-                         sot.scheduler_hints)
-        self.assertEqual(EXAMPLE['OS-EXT-SRV-ATTR:user_data'], sot.user_data)
 
     def test_detail(self):
         sot = server.ServerDetail()
@@ -193,7 +225,8 @@ class TestServer(testtools.TestCase):
         body = {"changePassword": {"adminPass": "a"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_reboot(self):
         sot = server.Server(**EXAMPLE)
@@ -204,7 +237,8 @@ class TestServer(testtools.TestCase):
         body = {"reboot": {"type": "HARD"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_force_delete(self):
         sot = server.Server(**EXAMPLE)
@@ -215,7 +249,8 @@ class TestServer(testtools.TestCase):
         body = {'forceDelete': None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_rebuild(self):
         sot = server.Server(**EXAMPLE)
@@ -246,7 +281,8 @@ class TestServer(testtools.TestCase):
         }
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_rebuild_minimal(self):
         sot = server.Server(**EXAMPLE)
@@ -270,7 +306,8 @@ class TestServer(testtools.TestCase):
         }
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_resize(self):
         sot = server.Server(**EXAMPLE)
@@ -281,7 +318,8 @@ class TestServer(testtools.TestCase):
         body = {"resize": {"flavorRef": "2"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_confirm_resize(self):
         sot = server.Server(**EXAMPLE)
@@ -292,7 +330,8 @@ class TestServer(testtools.TestCase):
         body = {"confirmResize": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_revert_resize(self):
         sot = server.Server(**EXAMPLE)
@@ -303,7 +342,8 @@ class TestServer(testtools.TestCase):
         body = {"revertResize": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_create_image(self):
         sot = server.Server(**EXAMPLE)
@@ -316,7 +356,8 @@ class TestServer(testtools.TestCase):
         body = {"createImage": {'name': name, 'metadata': metadata}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_create_image_minimal(self):
         sot = server.Server(**EXAMPLE)
@@ -328,7 +369,8 @@ class TestServer(testtools.TestCase):
         body = {"createImage": {'name': name}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=dict(sot.service), json=body, headers=headers)
+            url, endpoint_filter=dict(sot.service), json=body, headers=headers,
+            endpoint_override=None)
 
     def test_add_security_group(self):
         sot = server.Server(**EXAMPLE)
@@ -339,7 +381,8 @@ class TestServer(testtools.TestCase):
         body = {"addSecurityGroup": {"name": "group"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_remove_security_group(self):
         sot = server.Server(**EXAMPLE)
@@ -350,7 +393,8 @@ class TestServer(testtools.TestCase):
         body = {"removeSecurityGroup": {"name": "group"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_reset_state(self):
         sot = server.Server(**EXAMPLE)
@@ -361,7 +405,8 @@ class TestServer(testtools.TestCase):
         body = {"os-resetState": {"state": 'active'}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_add_fixed_ip(self):
         sot = server.Server(**EXAMPLE)
@@ -373,7 +418,8 @@ class TestServer(testtools.TestCase):
         body = {"addFixedIp": {"networkId": "NETWORK-ID"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_remove_fixed_ip(self):
         sot = server.Server(**EXAMPLE)
@@ -385,7 +431,8 @@ class TestServer(testtools.TestCase):
         body = {"removeFixedIp": {"address": "ADDRESS"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_add_floating_ip(self):
         sot = server.Server(**EXAMPLE)
@@ -397,7 +444,8 @@ class TestServer(testtools.TestCase):
         body = {"addFloatingIp": {"address": "FLOATING-IP"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_add_floating_ip_with_fixed_addr(self):
         sot = server.Server(**EXAMPLE)
@@ -410,7 +458,8 @@ class TestServer(testtools.TestCase):
                                   "fixed_address": "FIXED-ADDR"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_remove_floating_ip(self):
         sot = server.Server(**EXAMPLE)
@@ -422,7 +471,8 @@ class TestServer(testtools.TestCase):
         body = {"removeFloatingIp": {"address": "I-AM-FLOATING"}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_pause(self):
         sot = server.Server(**EXAMPLE)
@@ -434,7 +484,8 @@ class TestServer(testtools.TestCase):
         body = {"pause": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_unpause(self):
         sot = server.Server(**EXAMPLE)
@@ -446,7 +497,8 @@ class TestServer(testtools.TestCase):
         body = {"unpause": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_suspend(self):
         sot = server.Server(**EXAMPLE)
@@ -458,7 +510,8 @@ class TestServer(testtools.TestCase):
         body = {"suspend": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_resume(self):
         sot = server.Server(**EXAMPLE)
@@ -470,7 +523,8 @@ class TestServer(testtools.TestCase):
         body = {"resume": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_lock(self):
         sot = server.Server(**EXAMPLE)
@@ -482,7 +536,8 @@ class TestServer(testtools.TestCase):
         body = {"lock": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_unlock(self):
         sot = server.Server(**EXAMPLE)
@@ -494,7 +549,8 @@ class TestServer(testtools.TestCase):
         body = {"unlock": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_rescue(self):
         sot = server.Server(**EXAMPLE)
@@ -506,7 +562,8 @@ class TestServer(testtools.TestCase):
         body = {"rescue": {}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_rescue_with_options(self):
         sot = server.Server(**EXAMPLE)
@@ -519,7 +576,8 @@ class TestServer(testtools.TestCase):
                            'rescue_image_ref': 'IMG-ID'}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_unrescue(self):
         sot = server.Server(**EXAMPLE)
@@ -531,7 +589,8 @@ class TestServer(testtools.TestCase):
         body = {"unrescue": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_evacuate(self):
         sot = server.Server(**EXAMPLE)
@@ -543,7 +602,8 @@ class TestServer(testtools.TestCase):
         body = {"evacuate": {}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_evacuate_with_options(self):
         sot = server.Server(**EXAMPLE)
@@ -557,7 +617,8 @@ class TestServer(testtools.TestCase):
                              'force': True}}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_start(self):
         sot = server.Server(**EXAMPLE)
@@ -569,7 +630,8 @@ class TestServer(testtools.TestCase):
         body = {"os-start": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_stop(self):
         sot = server.Server(**EXAMPLE)
@@ -581,7 +643,8 @@ class TestServer(testtools.TestCase):
         body = {"os-stop": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_shelve(self):
         sot = server.Server(**EXAMPLE)
@@ -593,7 +656,8 @@ class TestServer(testtools.TestCase):
         body = {"shelve": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)
 
     def test_unshelve(self):
         sot = server.Server(**EXAMPLE)
@@ -605,4 +669,5 @@ class TestServer(testtools.TestCase):
         body = {"unshelve": None}
         headers = {'Accept': ''}
         self.sess.post.assert_called_with(
-            url, endpoint_filter=sot.service, json=body, headers=headers)
+            url, endpoint_filter=sot.service, json=body, headers=headers,
+            endpoint_override=None)

@@ -820,6 +820,22 @@ class TestResource(base.TestCase):
         self.assertEqual({key: {"x": body_value}}, result.body)
         self.assertEqual({"y": header_value}, result.headers)
 
+    def test__prepare_request_path_contains_project_id(self):
+        key = 'key'
+
+        class Test(resource2.Resource):
+            base_path = "/%(project_id)s/something"
+            resource_key = key
+
+        session = mock.Mock()
+        session.get_project_id.return_value = 'uuid'
+
+        sot = Test()
+        result = sot._prepare_request(requires_id=False, prepend_key=True,
+                                      session=session)
+
+        self.assertEqual('/uuid/something', result.uri)
+
     def test__filter_component(self):
         client_name = "client_name"
         server_name = "serverName"
@@ -964,6 +980,8 @@ class TestResourceActions(base.TestCase):
         self.session.delete = mock.Mock(return_value=self.response)
         self.session.head = mock.Mock(return_value=self.response)
 
+        self.session.get_service.return_value = self.sot.service
+
     def _test_create(self, cls, requires_id=False, prepend_key=False):
         id = "id" if requires_id else None
         sot = cls(id=id)
@@ -973,19 +991,22 @@ class TestResourceActions(base.TestCase):
         result = sot.create(self.session, prepend_key=prepend_key)
 
         sot._prepare_request.assert_called_once_with(
-            requires_id=requires_id, prepend_key=prepend_key)
+            requires_id=requires_id, prepend_key=prepend_key,
+            session=self.session)
         if requires_id:
             self.session.put.assert_called_once_with(
                 self.request.uri,
                 endpoint_filter=self.sot.service,
                 endpoint_override=None,
-                json=self.request.body, headers=self.request.headers)
+                json=self.request.body, headers=self.request.headers,
+                microversion=None)
         else:
             self.session.post.assert_called_once_with(
                 self.request.uri,
                 endpoint_filter=self.sot.service,
                 endpoint_override=None,
-                json=self.request.body, headers=self.request.headers)
+                json=self.request.body, headers=self.request.headers,
+                microversion=None)
 
         sot._translate_response.assert_called_once_with(self.response)
         self.assertEqual(result, sot)
@@ -1011,11 +1032,13 @@ class TestResourceActions(base.TestCase):
     def test_get(self):
         result = self.sot.get(self.session)
 
-        self.sot._prepare_request.assert_called_once_with(requires_id=True)
+        self.sot._prepare_request.assert_called_once_with(
+            requires_id=True, session=self.session)
         self.session.get.assert_called_once_with(
             self.request.uri,
             endpoint_override=None,
-            endpoint_filter=self.sot.service
+            endpoint_filter=self.sot.service,
+            microversion=None
         )
 
         self.sot._translate_response.assert_called_once_with(self.response)
@@ -1024,11 +1047,13 @@ class TestResourceActions(base.TestCase):
     def test_get_not_requires_id(self):
         result = self.sot.get(self.session, False)
 
-        self.sot._prepare_request.assert_called_once_with(requires_id=False)
+        self.sot._prepare_request.assert_called_once_with(
+            requires_id=False, session=self.session)
         self.session.get.assert_called_once_with(
             self.request.uri,
             endpoint_filter=self.sot.service,
-            endpoint_override=None
+            endpoint_override=None,
+            microversion=None
         )
 
         self.sot._translate_response.assert_called_once_with(self.response)
@@ -1037,19 +1062,20 @@ class TestResourceActions(base.TestCase):
     def test_head(self):
         result = self.sot.head(self.session)
 
-        self.sot._prepare_request.assert_called_once_with()
+        self.sot._prepare_request.assert_called_once_with(session=self.session)
         self.session.head.assert_called_once_with(
             self.request.uri,
             endpoint_filter=self.sot.service,
             endpoint_override=None,
-            headers={"Accept": ""}
+            headers={"Accept": ""},
+            microversion=None,
         )
 
         self.sot._translate_response.assert_called_once_with(self.response)
         self.assertEqual(result, self.sot)
 
     def _test_update(self, patch_update=False, prepend_key=True,
-                     has_body=True):
+                     has_body=True, microversion=None):
         self.sot.patch_update = patch_update
 
         # Need to make sot look dirty so we can attempt an update
@@ -1060,7 +1086,7 @@ class TestResourceActions(base.TestCase):
                         has_body=has_body)
 
         self.sot._prepare_request.assert_called_once_with(
-            prepend_key=prepend_key)
+            prepend_key=prepend_key, session=self.session)
 
         if patch_update:
             self.session.patch.assert_called_once_with(
@@ -1068,7 +1094,8 @@ class TestResourceActions(base.TestCase):
                 endpoint_filter=self.sot.service,
                 endpoint_override=None,
                 json=self.request.body,
-                headers=self.request.headers
+                headers=self.request.headers,
+                microversion=microversion
             )
         else:
             self.session.put.assert_called_once_with(
@@ -1076,7 +1103,8 @@ class TestResourceActions(base.TestCase):
                 endpoint_filter=self.sot.service,
                 endpoint_override=None,
                 json=self.request.body,
-                headers=self.request.headers
+                headers=self.request.headers,
+                microversion=microversion
             )
 
         self.sot._translate_response.assert_called_once_with(
@@ -1098,16 +1126,27 @@ class TestResourceActions(base.TestCase):
 
         self.session.put.assert_not_called()
 
+    def test_update_with_microversion(self):
+        self.sot.service.microversion = '2.26'
+        self._test_update(patch_update=False, prepend_key=True, has_body=True,
+                          microversion='2.26')
+
+    def test_update_patch_with_microversion(self):
+        self.sot.service.microversion = '2.26'
+        self._test_update(patch_update=True, prepend_key=False, has_body=False,
+                          microversion='2.26')
+
     def test_delete(self):
         result = self.sot.delete(self.session)
 
-        self.sot._prepare_request.assert_called_once_with()
+        self.sot._prepare_request.assert_called_once_with(session=self.session)
         self.session.delete.assert_called_once_with(
             self.request.uri,
             endpoint_filter=self.sot.service,
             endpoint_override=None,
             params=None,
-            headers={"Accept": ""})
+            headers={"Accept": ""},
+            microversion=None)
 
         self.sot._translate_response.assert_called_once_with(
             self.response, has_body=False)
@@ -1127,6 +1166,7 @@ class TestResourceActions(base.TestCase):
         self.session.get.assert_called_once_with(
             self.base_path,
             endpoint_filter=self.sot.service,
+            microversion=None,
             endpoint_override=None,
             headers={"Accept": "application/json"},
             params={})
@@ -1166,6 +1206,7 @@ class TestResourceActions(base.TestCase):
         self.session.get.assert_called_once_with(
             self.base_path,
             endpoint_filter=self.sot.service,
+            microversion=None,
             endpoint_override=None,
             headers={"Accept": "application/json"},
             params={})
@@ -1193,6 +1234,7 @@ class TestResourceActions(base.TestCase):
         self.session.get.assert_called_once_with(
             self.base_path,
             endpoint_filter=self.sot.service,
+            microversion=None,
             endpoint_override=None,
             headers={"Accept": "application/json"},
             params={})
@@ -1268,6 +1310,7 @@ class TestResourceActions(base.TestCase):
         self.session.get.assert_called_with(
             self.base_path,
             endpoint_filter=self.sot.service,
+            microversion=None,
             endpoint_override=None,
             headers={"Accept": "application/json"},
             params={})
@@ -1277,6 +1320,7 @@ class TestResourceActions(base.TestCase):
         self.session.get.assert_called_with(
             self.base_path,
             endpoint_filter=self.sot.service,
+            microversion=None,
             endpoint_override=None,
             headers={"Accept": "application/json"},
             params={"limit": 1, "marker": 1})
@@ -1285,6 +1329,7 @@ class TestResourceActions(base.TestCase):
         self.session.get.assert_called_with(
             self.base_path,
             endpoint_filter=self.sot.service,
+            microversion=None,
             endpoint_override=None,
             headers={"Accept": "application/json"},
             params={"limit": 1, "marker": 2})
@@ -1313,6 +1358,7 @@ class TestResourceActions(base.TestCase):
         self.session.get.assert_called_with(
             self.base_path,
             endpoint_filter=self.sot.service,
+            microversion=None,
             endpoint_override=None,
             headers={"Accept": "application/json"},
             params={})
@@ -1323,6 +1369,7 @@ class TestResourceActions(base.TestCase):
         self.session.get.assert_called_with(
             self.base_path,
             endpoint_filter=self.sot.service,
+            microversion=None,
             endpoint_override=None,
             headers={"Accept": "application/json"},
             params={"limit": 2, "marker": 2}
@@ -1333,6 +1380,51 @@ class TestResourceActions(base.TestCase):
 
         # Ensure we only made two calls to get this done
         self.assertEqual(2, len(self.session.get.call_args_list))
+
+    def test_list_path_with_project_id(self):
+        id = 1
+
+        mock_response = mock.Mock()
+        mock_response.json.side_effect = [[{"id": id}]]
+
+        self.session.get.return_value = mock_response
+        self.session.get_project_id.return_value = 'uuid'
+
+        class Test(self.test_class):
+            base_path = "/%(project_id)s/something"
+
+        list(Test.list(self.session, paginated=False))
+
+        self.session.get.assert_called_once_with(
+            '/uuid/something',
+            endpoint_filter=self.sot.service,
+            microversion=None,
+            endpoint_override=None,
+            headers={'Accept': 'application/json'},
+            params={}
+        )
+
+    def test_list_with_microversion(self):
+        mock_response = mock.Mock()
+        mock_response.json.return_value = []
+
+        session = mock.Mock()
+        session.get.return_value = mock_response
+        endpoint_filter = service_filter.ServiceFilter(
+            'service', microversion='2.26')
+        session.get_service.return_value = endpoint_filter
+
+        result = list(self.sot.list(session))
+
+        session.get.assert_called_once_with(
+            self.base_path,
+            endpoint_filter=endpoint_filter,
+            microversion='2.26',
+            endpoint_override=None,
+            headers={"Accept": "application/json"},
+            params={})
+
+        self.assertEqual([], result)
 
 
 class TestResourceFind(base.TestCase):
@@ -1441,6 +1533,35 @@ class TestResourceFind(base.TestCase):
         self.assertRaises(
             exceptions.DuplicateResource,
             resource2.Resource._get_one_match, the_id, [match, match])
+
+    def test_find_existing_raise_bad_request(self):
+        value = 1
+
+        class Test(resource2.Resource):
+            @classmethod
+            def existing(cls, **kwargs):
+                raise exceptions.HttpException(http_status=400)
+
+            @classmethod
+            def list(cls, session):
+                return None
+
+            @classmethod
+            def _get_one_match(cls, *args):
+                return value
+
+        result = Test.find("session", "name")
+
+        self.assertEqual(result, value)
+
+    def test_find_existing_raise_exception(self):
+        class Test(resource2.Resource):
+            @classmethod
+            def existing(cls, **kwargs):
+                raise exceptions.HttpException(http_status=500)
+
+        self.assertRaises(exceptions.HttpException, Test.find,
+                          "session", "name")
 
 
 class TestWaitForStatus(base.TestCase):

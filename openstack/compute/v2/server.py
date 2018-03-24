@@ -12,11 +12,12 @@
 
 from openstack.compute import compute_service
 from openstack.compute.v2 import metadata
+from openstack.compute.v2 import tag
 from openstack import resource2
 from openstack import utils
 
 
-class Server(resource2.Resource, metadata.MetadataMixin):
+class Server(resource2.Resource, metadata.MetadataMixin, tag.TagMixin):
     resource_key = 'server'
     resources_key = 'servers'
     base_path = '/servers'
@@ -54,97 +55,129 @@ class Server(resource2.Resource, metadata.MetadataMixin):
     #: and ``version``, which is either 4 or 6 depending on the protocol
     #: of the IP address. *Type: dict*
     addresses = resource2.Body('addresses', type=dict)
+    #: When a server is first created, it provides the administrator password.
+    admin_password = resource2.Body('adminPass')
+    #: A list of an attached volumes. Each item in the list contains at least
+    #: an "id" key to identify the specific volumes.
+    attached_volumes = resource2.Body(
+        'os-extended-volumes:volumes_attached')
+    #: The name of the availability zone this server is a part of.
+    availability_zone = resource2.Body('OS-EXT-AZ:availability_zone')
+    #: Enables fine grained control of the block device mapping for an
+    #: instance. This is typically used for booting servers from volumes.
+    block_device_mapping = resource2.Body('block_device_mapping_v2')
     #: Timestamp of when the server was created.
     created_at = resource2.Body('created')
+    #: The human readable information about the server.
+    #: Since microversion 2.19.
+    description = resource2.Body('description')
+    #: The disk configuration. Either AUTO or MANUAL.
+    disk_config = resource2.Body('OS-DCF:diskConfig')
+    #: The reason about the server in ERROR status.
+    fault = resource2.Body('fault', type=dict)
     #: The flavor reference, as a ID or full URL, for the flavor to use for
     #: this server.
     flavor_id = resource2.Body('flavorRef')
     #: The flavor property as returned from server.
     flavor = resource2.Body('flavor', type=dict)
+    #: Indicates whether a configuration drive enables metadata injection.
+    #: Not all cloud providers enable this feature.
+    has_config_drive = resource2.Body('config_drive')
     #: An ID representing the host of this server.
     host_id = resource2.Body('hostId')
+    #: The name of the host of this server.
+    host = resource2.Body('OS-EXT-SRV-ATTR:host')
+    #: The hostname of the server. Since microversion 2.3.
+    hostname = resource2.Body('OS-EXT-SRV-ATTR:hostname')
+    #: The status of the compute service. The value can be UP,
+    #: DOWN, UNKNOWN or an empty string. Since microversion 2.16.
+    host_status = resource2.Body('host_status')
+    #: The hypervisor host name. Appears in the response for administrative
+    #: users only.
+    hypervisor_hostname = resource2.Body('OS-EXT-SRV-ATTR:hypervisor_hostname')
     #: The image reference, as a ID or full URL, for the image to use for
     #: this server.
     image_id = resource2.Body('imageRef')
     #: The image property as returned from server.
     image = resource2.Body('image', type=dict)
+    #: The instance name. The Compute API generates the instance name from the
+    #: instance name template. Appears in the response for administrative users
+    #: only.
+    instance_name = resource2.Body('OS-EXT-SRV-ATTR:instance_name')
+    #: The UUID of the kernel image when using AMI format image.
+    #: Since microversion 2.3.
+    kernel_id = resource2.Body('OS-EXT-SRV-ATTR:kernel_id')
+    #: The name of an associated keypair
+    key_name = resource2.Body('key_name')
+    #: The timestamp when the server was launched.
+    launched_at = resource2.Body('OS-SRV-USG:launched_at')
+    #: The launch order of the server created in batch. Since microversion 2.3.
+    launch_index = resource2.Body('OS-EXT-SRV-ATTR:launch_index', type=int)
+    #: The lock status of the server. Since microversion 2.9.
+    is_locked = resource2.Body('locked')
     #: Metadata stored for this server. *Type: dict*
     metadata = resource2.Body('metadata', type=dict)
+    #: A networks object. Required parameter when there are multiple
+    #: networks defined for the tenant. When you do not specify the
+    #: networks parameter, the server attaches to the only network
+    #: created for the current tenant.
+    networks = resource2.Body('networks')
+    #: The file path and contents, text only, to inject into the server at
+    #: launch. The maximum size of the file path data is 255 bytes.
+    #: The maximum limit is The number of allowed bytes in the decoded,
+    #: rather than encoded, data.
+    personality = resource2.Body('personality')
+    #: The power state of this server.
+    power_state = resource2.Body('OS-EXT-STS:power_state')
     #: While the server is building, this value represents the percentage
     #: of completion. Once it is completed, it will be 100.  *Type: int*
     progress = resource2.Body('progress', type=int)
     #: The ID of the project this server is associated with.
     project_id = resource2.Body('tenant_id')
+    #: The UUID of the ramdisk image when using AMI format image.
+    #: Since microversion 2.3.
+    ramdisk_id = resource2.Body('OS-EXT-SRV-ATTR:ramdisk_id')
+    #: The reservation id for the servers created in batch.
+    #: Since microversion 2.3.
+    reservation_id = resource2.Body('OS-EXT-SRV-ATTR:reservation_id')
+    #: The device name of the system disk of the server.
+    #: Since microversion 2.3.
+    root_device_name = resource2.Body('OS-EXT-SRV-ATTR:root_device_name')
+    #: The dictionary of data to send to the scheduler.
+    scheduler_hints = resource2.Body('os:scheduler_hints', type=dict)
+    #: A list of applicable security groups. Each group contains keys for
+    #: description, name, id, and rules.
+    security_groups = resource2.Body('security_groups')
     #: The state this server is in. Valid values include ``ACTIVE``,
     #: ``BUILDING``, ``DELETED``, ``ERROR``, ``HARD_REBOOT``, ``PASSWORD``,
     #: ``PAUSED``, ``REBOOT``, ``REBUILD``, ``RESCUED``, ``RESIZED``,
     #: ``REVERT_RESIZE``, ``SHUTOFF``, ``SOFT_DELETED``, ``STOPPED``,
     #: ``SUSPENDED``, ``UNKNOWN``, or ``VERIFY_RESIZE``.
     status = resource2.Body('status')
-    #: Timestamp of when this server was last updated.
-    updated_at = resource2.Body('updated')
-    #: The ID of the owners of this server.
-    user_id = resource2.Body('user_id')
-    #: The name of an associated keypair
-    key_name = resource2.Body('key_name')
-    #: The disk configuration. Either AUTO or MANUAL.
-    disk_config = resource2.Body('OS-DCF:diskConfig')
-    #: Indicates whether a configuration drive enables metadata injection.
-    #: Not all cloud providers enable this feature.
-    has_config_drive = resource2.Body('config_drive')
-    #: The name of the availability zone this server is a part of.
-    availability_zone = resource2.Body('OS-EXT-AZ:availability_zone')
-    #: The power state of this server.
-    power_state = resource2.Body('OS-EXT-STS:power_state')
+    #: A list of tags for the server. Since microversion 2.26.
+    tags = resource2.Body('tags')
     #: The task state of this server.
     task_state = resource2.Body('OS-EXT-STS:task_state')
-    #: The VM state of this server.
-    vm_state = resource2.Body('OS-EXT-STS:vm_state')
-    #: A list of an attached volumes. Each item in the list contains at least
-    #: an "id" key to identify the specific volumes.
-    attached_volumes = resource2.Body(
-        'os-extended-volumes:volumes_attached')
-    #: The timestamp when the server was launched.
-    launched_at = resource2.Body('OS-SRV-USG:launched_at')
     #: The timestamp when the server was terminated (if it has been).
     terminated_at = resource2.Body('OS-SRV-USG:terminated_at')
-    #: A list of applicable security groups. Each group contains keys for
-    #: description, name, id, and rules.
-    security_groups = resource2.Body('security_groups')
-    #: When a server is first created, it provides the administrator password.
-    admin_password = resource2.Body('adminPass')
-    #: The file path and contents, text only, to inject into the server at
-    #: launch. The maximum size of the file path data is 255 bytes.
-    #: The maximum limit is The number of allowed bytes in the decoded,
-    #: rather than encoded, data.
-    personality = resource2.Body('personality')
+    #: Timestamp of when this server was last updated.
+    updated_at = resource2.Body('updated')
     #: Configuration information or scripts to use upon launch.
     #: Must be Base64 encoded.
     user_data = resource2.Body('OS-EXT-SRV-ATTR:user_data')
-    #: Enables fine grained control of the block device mapping for an
-    #: instance. This is typically used for booting servers from volumes.
-    block_device_mapping = resource2.Body('block_device_mapping_v2')
-    #: The dictionary of data to send to the scheduler.
-    scheduler_hints = resource2.Body('os:scheduler_hints', type=dict)
-    #: A networks object. Required parameter when there are multiple
-    #: networks defined for the tenant. When you do not specify the
-    #: networks parameter, the server attaches to the only network
-    #: created for the current tenant.
-    networks = resource2.Body('networks')
-    #: The hypervisor host name. Appears in the response for administrative
-    #: users only.
-    hypervisor_hostname = resource2.Body('OS-EXT-SRV-ATTR:hypervisor_hostname')
-    #: The instance name. The Compute API generates the instance name from the
-    #: instance name template. Appears in the response for administrative users
-    #: only.
-    instance_name = resource2.Body('OS-EXT-SRV-ATTR:instance_name')
+    #: The ID of the owners of this server.
+    user_id = resource2.Body('user_id')
+    #: The VM state of this server.
+    vm_state = resource2.Body('OS-EXT-STS:vm_state')
 
     min_count = resource2.Body("min_count")
     max_count = resource2.Body("max_count")
 
-    def _prepare_request(self, requires_id=True, prepend_key=True):
+    def _prepare_request(self, requires_id=True, prepend_key=True,
+                         session=None):
         request = super(Server, self)._prepare_request(requires_id=requires_id,
-                                                       prepend_key=prepend_key)
+                                                       prepend_key=prepend_key,
+                                                       session=session)
 
         server_body = request.body[self.resource_key]
 

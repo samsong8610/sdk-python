@@ -76,6 +76,7 @@ from openstack import module_loader
 from openstack.anti_ddos import anti_ddos_service
 from openstack.auto_scaling import auto_scaling_service
 from openstack.block_store import block_store_service
+from openstack.bms import bms_service
 from openstack.cdn import cdn_service
 from openstack.cloud_eye import cloud_eye_service
 from openstack.compute import compute_service
@@ -95,7 +96,6 @@ from openstack.orchestration import orchestration_service
 from openstack.smn import smn_service
 from openstack.volume_backup import volume_backup_service
 from openstack.vpc import vpc_service
-from openstack.bms import bms_service
 
 # from openstack.key_manager import key_manager_service
 # from openstack.bare_metal import bare_metal_service
@@ -268,3 +268,27 @@ class Profile(object):
         :param str interface: Desired service interface.
         """
         self._setter(service, "interface", interface)
+
+    def set_microversion(self, service, microversion):
+        """Set the desired microversion for the specified service.
+
+        :param str service: Service type.
+        :param str microversion: Desired service microversion.
+        """
+        self._setter(service, "microversion", microversion)
+
+    def set_min_version(self, service, version):
+        """Set the minmum microversion desired for the specified service.
+
+        :param str service: Service type.
+        :param str microversion: Desired minmum service microversion.
+        """
+        self._setter(service, "min_version", version)
+
+    def set_max_version(self, service, version):
+        """Set the maximum microversion desired for the specified service.
+
+        :param str service: Service type.
+        :param str microversion: Desired maximum service microversion.
+        """
+        self._setter(service, "max_version", version)

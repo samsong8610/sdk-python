@@ -17,7 +17,7 @@ from openstack import resource2
 class VolumeAttachment(resource2.Resource):
     resource_key = 'volumeAttachment'
     resources_key = 'volumeAttachments'
-    base_path = '/servers/%(server_id)s/os-volume_attachments'
+    base_path = '/servers/%(serverId)s/os-volume_attachments'
     service = compute_service.ComputeService()
 
     # capabilities
@@ -27,15 +27,11 @@ class VolumeAttachment(resource2.Resource):
     allow_delete = True
     allow_list = True
 
-    _query_mapping = resource2.QueryParameters("limit", "offset")
-
     #: Name of the device such as, /dev/vdb.
     device = resource2.Body('device')
     #: The ID of the attachment.
     id = resource2.Body('id')
     #: The ID for the server.
-    server_id = resource2.URI('server_id')
+    server_id = resource2.URI('serverId')
     #: The ID of the attached volume.
     volume_id = resource2.Body('volumeId')
-    #: The ID of the attachment you want to delete or update.
-    attachment_id = resource2.Body('attachment_id', alternate_id=True)

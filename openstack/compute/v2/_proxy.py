@@ -23,6 +23,7 @@ from openstack.compute.v2 import server_interface as _server_interface
 from openstack.compute.v2 import server_ip
 from openstack.compute.v2 import service as _service
 from openstack.compute.v2 import volume_attachment as _volume_attachment
+from openstack import exceptions
 from openstack import proxy2
 from openstack import resource2
 
@@ -896,20 +897,22 @@ class Proxy(proxy2.BaseProxy):
 
         return self._list(az, paginated=False)
 
-    def get_server_metadata(self, server):
+    def get_server_metadata(self, server, key=None):
         """Return a dictionary of metadata for a server
 
         :param server: Either the ID of a server or a
                        :class:`~openstack.compute.v2.server.Server` or
                        :class:`~openstack.compute.v2.server.ServerDetail`
                        instance.
+        :param key: The key of the metadata to get. If ``None``, return all.
+        :type key: str or ``None``
 
         :returns: A :class:`~openstack.compute.v2.server.Server` with only the
                   server's metadata. All keys and values are Unicode text.
         :rtype: :class:`~openstack.compute.v2.server.Server`
         """
         res = self._get_base_resource(server, _server.Server)
-        metadata = res.get_metadata(self._session)
+        metadata = res.get_metadata(self._session, key=key)
         result = _server.Server.existing(id=res.id, metadata=metadata)
         return result
 
@@ -933,6 +936,25 @@ class Proxy(proxy2.BaseProxy):
         metadata = res.set_metadata(self._session, **metadata)
         result = _server.Server.existing(id=res.id, metadata=metadata)
         return result
+
+    def update_server_metadata(self, server, key, value):
+        """Creates or replaces a metadata item, by key
+
+        :param server: Either the ID of a server or a
+                       :class:`~openstack.compute.v2.server.Server` or
+                       :class:`~openstack.compute.v2.server.ServerDetail`
+                       instance.
+        :param str key: The key of the metadata to update.
+        :param str value: The new value of the metadata.
+
+        :returns: A :class:`~openstack.compute.v2.server.Server` with only the
+                  updated server's metadata.
+                  All keys and values are Unicode text.
+        :rtype: :class:`~openstack.compute.v2.server.Server`
+        """
+        res = self._get_base_resource(server, _server.Server)
+        updated = res.update_metadata(self._session, key, value)
+        return _server.Server.existing(id=res.id, metadata=updated)
 
     def delete_server_metadata(self, server, keys):
         """Delete metadata for a server
@@ -1130,112 +1152,101 @@ class Proxy(proxy2.BaseProxy):
         :param dict attrs: Keyword arguments which will be used to create a
             :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`,
             comprised of the properties on the VolumeAttachment class.
+            Available attributes include:
+
+            * ``volume_id``: The ID of the disk to be attached. Mandatory.
+            * ``device``: The mount point, such as /dev/sda. Mandatory.
+                The value cannot be the same as an existing one.
 
         :returns: The results of volume attachment creation
         :rtype:
             :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
         """
         server_id = resource2.Resource._get_id(server)
-        return self._create(_volume_attachment.VolumeAttachment,
-                            server_id=server_id, **attrs)
+        attrs.update(server_id=server_id)
+        return self._create(_volume_attachment.VolumeAttachment, **attrs)
 
-    def update_volume_attachment(self, volume_attachment, server,
-                                 **attrs):
-        """update a volume attachment
-
-        :param volume_attachment:
-            The value can be either the ID of a volume attachment or a
-            :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
-            instance.
-        :param server: This parameter need to be specified when
-                       VolumeAttachment ID is given as value. It can be
-                       either the ID of a server or a
-                       :class:`~openstack.compute.v2.server.Server`
-                       instance that the attachment belongs to.
-        :param bool ignore_missing: When set to ``False``
-                    :class:`~openstack.exceptions.ResourceNotFound` will be
-                    raised when the volume attachment does not exist.
-                    When set to ``True``, no exception will be set when
-                    attempting to delete a nonexistent volume  attachment.
-
-        :returns: ``None``
-        """
-        server_id = self._get_uri_attribute(volume_attachment, server,
-                                            "server_id")
-        volume_attachment = resource2.Resource._get_id(volume_attachment)
-
-        return self._update(_volume_attachment.VolumeAttachment,
-                            attachment_id=volume_attachment,
-                            server_id=server_id)
-
-    def delete_volume_attachment(self, volume_attachment, server,
-                                 ignore_missing=True):
+    def delete_volume_attachment(self, server, volume_attachment,
+                                 ignore_missing=True, is_force=False):
         """Delete a volume attachment
 
+        :param server: This parameter need to be specified when
+            VolumeAttachment ID is given as value. It can be either
+            the ID of a server or a
+            :class:`~openstack.compute.v2.server.Server`
+            instance that the attachment belongs to.
         :param volume_attachment:
             The value can be either the ID of a volume attachment or a
             :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
             instance.
-        :param server: This parameter need to be specified when
-                       VolumeAttachment ID is given as value. It can be either
-                       the ID of a server or a
-                       :class:`~openstack.compute.v2.server.Server`
-                       instance that the attachment belongs to.
         :param bool ignore_missing: When set to ``False``
-                    :class:`~openstack.exceptions.ResourceNotFound` will be
-                    raised when the volume attachment does not exist.
-                    When set to ``True``, no exception will be set when
-                    attempting to delete a nonexistent volume attachment.
+            :class:`~openstack.exceptions.ResourceNotFound` will be
+            raised when the volume attachment does not exist.
+            When set to ``True``, no exception will be set when
+            attempting to delete a nonexistent volume attachment.
+        :param bool is_force: When set to ``True``, detach the volume force.
 
         :returns: ``None``
         """
-        server_id = self._get_uri_attribute(volume_attachment, server,
-                                            "server_id")
-        volume_attachment = resource2.Resource._get_id(volume_attachment)
+        server_id = resource2.Resource._get_id(server)
+        attrs = {'server_id': server_id} if server_id else {}
+        volume_attachment = self._get_resource(
+            _volume_attachment.VolumeAttachment, volume_attachment, **attrs)
+        if not volume_attachment.server_id:
+            raise exceptions.SDKException(
+                message='The parameter `server` is required')
+        if is_force:
+            params = {'delete_flag': 1}
+            self._delete(_volume_attachment.VolumeAttachment,
+                        volume_attachment,
+                        ignore_missing=ignore_missing,
+                        params=params)
+        else:
+            self._delete(_volume_attachment.VolumeAttachment,
+                        volume_attachment,
+                        ignore_missing=ignore_missing)
 
-        self._delete(_volume_attachment.VolumeAttachment,
-                     attachment_id=volume_attachment,
-                     server_id=server_id,
-                     ignore_missing=ignore_missing)
-
-    def get_volume_attachment(self, volume_attachment, server,
+    def get_volume_attachment(self, server, volume_attachment,
                               ignore_missing=True):
         """Get a single volume attachment
 
+        :param server: This parameter need to be specified when
+            VolumeAttachment ID is given as value. It can be either
+            the ID of a server or a
+            :class:`~openstack.compute.v2.server.Server`
+            instance that the attachment belongs to.
         :param volume_attachment:
             The value can be the ID of a volume attachment or a
             :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
             instance.
-        :param server: This parameter need to be specified when
-                       VolumeAttachment ID is given as value. It can be either
-                       the ID of a server or a
-                       :class:`~openstack.compute.v2.server.Server`
-                       instance that the attachment belongs to.
         :param bool ignore_missing: When set to ``False``
-                    :class:`~openstack.exceptions.ResourceNotFound` will be
-                    raised when the volume attachment does not exist.
-                    When set to ``True``, no exception will be set when
-                    attempting to delete a nonexistent volume attachment.
+            :class:`~openstack.exceptions.ResourceNotFound` will be
+            raised when the volume attachment does not exist.
+            When set to ``True``, no exception will be set when
+            attempting to delete a nonexistent volume attachment.
 
         :returns: One
             :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
         :raises: :class:`~openstack.exceptions.ResourceNotFound`
                  when no resource can be found.
         """
-        server_id = self._get_uri_attribute(volume_attachment, server,
-                                            "server_id")
-        volume_attachment = resource2.Resource._get_id(volume_attachment)
+        server_id = resource2.Resource._get_id(server)
+        attrs = {'server_id': server_id} if server_id else {}
+        volume_attachment = self._get_resource(
+            _volume_attachment.VolumeAttachment, volume_attachment, **attrs)
+        if not volume_attachment.server_id:
+            raise exceptions.SDKException(
+                message='The parameter `server` is required')
 
         return self._get(_volume_attachment.VolumeAttachment,
-                         server_id=server_id,
-                         attachment_id=volume_attachment,
+                         volume_attachment,
                          ignore_missing=ignore_missing)
 
     def volume_attachments(self, server):
         """Return a generator of volume attachments
 
         :param server: The server can be either the ID of a server or a
-                       :class:`~openstack.compute.v2.server.Server`.
+            :class:`~openstack.compute.v2.server.Server`.
 
         :returns: A generator of VolumeAttachment objects
         :rtype:
@@ -1243,4 +1254,102 @@ class Proxy(proxy2.BaseProxy):
         """
         server_id = resource2.Resource._get_id(server)
         return self._list(_volume_attachment.VolumeAttachment, paginated=False,
-                          server_id=server_id)
+                          serverId=server_id)
+
+    def server_tags(self, server):
+        """Return a dictionary of tags for a server
+
+        :param server: Either the ID of a server or a
+            :class:`~openstack.compute.v2.server.Server` or
+            :class:`~openstack.compute.v2.server.ServerDetail` instance.
+
+        :returns: A :class:`~openstack.compute.v2.server.Server` with only the
+                  server's tags.
+        :rtype: :class:`~openstack.compute.v2.server.Server`
+        """
+        res = self._get_base_resource(server, _server.Server)
+        tags = res.list_tags(self._session)
+        result = _server.Server.existing(id=res.id, tags=tags)
+        return result
+
+    def set_server_tags(self, server, *tags):
+        """Replace all tags of the server with the new set of tags
+
+        :param server: Either the ID of a server or a
+            :class:`~openstack.compute.v2.server.Server` or
+            :class:`~openstack.compute.v2.server.ServerDetail` instance.
+        :param args tags: A list of tags.
+
+        :returns: A :class:`~openstack.compute.v2.server.Server` with only the
+                  server's tags.
+        :rtype: :class:`~openstack.compute.v2.server.Server`
+        """
+        res = self._get_base_resource(server, _server.Server)
+        tags = res.set_tags(self._session, *tags)
+        result = _server.Server.existing(id=res.id, tags=tags)
+        return result
+
+    def add_server_tag(self, server, tag):
+        """Add a single tag to the server
+
+        :param server: Either the ID of a server or a
+            :class:`~openstack.compute.v2.server.Server` or
+            :class:`~openstack.compute.v2.server.ServerDetail` instance.
+        :param str tag: The tag to add.
+
+        :returns: A :class:`~openstack.compute.v2.server.Server` with only the
+                  server's tags.
+        :rtype: :class:`~openstack.compute.v2.server.Server`
+        """
+        res = self._get_base_resource(server, _server.Server)
+        res.add_tag(self._session, tag)
+        tags = res.list_tags(self._session)
+        result = _server.Server.existing(id=res.id, tags=tags)
+        return result
+
+    def delete_server_tag(self, server, tag):
+        """Deletes a single tag from the server
+
+        :param server: Either the ID of a server or a
+            :class:`~openstack.compute.v2.server.Server` or
+            :class:`~openstack.compute.v2.server.ServerDetail` instance.
+        :param str tag: The tag to delete.
+
+        :returns: A :class:`~openstack.compute.v2.server.Server` with only the
+                  server's tags.
+        :rtype: :class:`~openstack.compute.v2.server.Server`
+        """
+        res = self._get_base_resource(server, _server.Server)
+        res.delete_tag(self._session, tag)
+        result = _server.Server.existing(id=res.id)
+        return result
+
+    def clean_server_tags(self, server):
+        """Delete all tags from the server
+
+        :param server: Either the ID of a server or a
+            :class:`~openstack.compute.v2.server.Server` or
+            :class:`~openstack.compute.v2.server.ServerDetail` instance.
+
+        :returns: A :class:`~openstack.compute.v2.server.Server` with only the
+                  server's tags.
+        :rtype: :class:`~openstack.compute.v2.server.Server`
+        """
+        res = self._get_base_resource(server, _server.Server)
+        res.delete_tags(self._session)
+        result = _server.Server.existing(id=res.id)
+        return result
+
+    def has_server_tag(self, server, tag):
+        """Check if the server has the desired tag
+
+        :param server: Either the ID of a server or a
+            :class:`~openstack.compute.v2.server.Server` or
+            :class:`~openstack.compute.v2.server.ServerDetail` instance.
+        :param str tag: The tag to check.
+
+        :returns: ``True`` if existed, otherwise ``False``.
+        :rtype: bool
+        """
+        res = self._get_base_resource(server, _server.Server)
+        return res.has_tag(self._session, tag)

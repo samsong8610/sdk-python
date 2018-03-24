@@ -15,19 +15,20 @@ import testtools
 from openstack.compute.v2 import volume_attachment
 
 EXAMPLE = {
-    'device': '1',
-    'id': '2',
-    'volume_id': '3',
+    'device': '/dev/sdc',
+    'id': 'a26887c6-c47b-4654-abb5-dfadf7d3f803',
+    'serverId': '4d8c3732-a248-40ed-bebc-539a6ffd25c0',
+    'volumeId': 'a26887c6-c47b-4654-abb5-dfadf7d3f803',
 }
 
 
-class TestServerInterface(testtools.TestCase):
+class TestVolumeAttachment(testtools.TestCase):
 
     def test_basic(self):
         sot = volume_attachment.VolumeAttachment()
         self.assertEqual('volumeAttachment', sot.resource_key)
         self.assertEqual('volumeAttachments', sot.resources_key)
-        self.assertEqual('/servers/%(server_id)s/os-volume_attachments',
+        self.assertEqual('/servers/%(serverId)s/os-volume_attachments',
                          sot.base_path)
         self.assertEqual('compute', sot.service.service_type)
         self.assertTrue(sot.allow_create)
@@ -36,7 +37,6 @@ class TestServerInterface(testtools.TestCase):
         self.assertTrue(sot.allow_delete)
         self.assertTrue(sot.allow_list)
         self.assertDictEqual({"limit": "limit",
-                              "offset": "offset",
                               "marker": "marker"},
                              sot._query_mapping._mapping)
 
@@ -44,4 +44,5 @@ class TestServerInterface(testtools.TestCase):
         sot = volume_attachment.VolumeAttachment(**EXAMPLE)
         self.assertEqual(EXAMPLE['device'], sot.device)
         self.assertEqual(EXAMPLE['id'], sot.id)
-        self.assertEqual(EXAMPLE['volume_id'], sot.volume_id)
+        self.assertEqual(EXAMPLE['serverId'], sot.server_id)
+        self.assertEqual(EXAMPLE['volumeId'], sot.volume_id)

@@ -91,7 +91,8 @@ class ServiceFilter(dict):
 
     def __init__(self, service_type, interface=PUBLIC, region=None,
                  service_name=None, version=None, api_version=None,
-                 requires_project_id=False):
+                 requires_project_id=True, microversion=None,
+                 min_version=None, max_version=None):
         """Create a service identifier.
 
         :param string service_type: The desired type of service.
@@ -100,9 +101,12 @@ class ServiceFilter(dict):
         :param string region: The desired region (optional).
         :param string service_name: Name of the service
         :param string version: Version of service to use.
-        :param string api_version: Microversion of service supported.
+        :param string api_version: Desired version of service to use.
         :param bool requires_project_id: True if this service's endpoint
                                          expects project id to be included.
+        :param str microversion: The microversion sent with each requests.
+        :param str min_version: The minimum desired microversion.
+        :param str max_version: The maximum desired microversion.
         """
         self['service_type'] = service_type.lower()
         self['interface'] = interface
@@ -111,6 +115,9 @@ class ServiceFilter(dict):
         self['version'] = version
         self['api_version'] = api_version
         self['requires_project_id'] = requires_project_id
+        self['microversion'] = microversion
+        self['min_version'] = min_version
+        self['max_version'] = max_version
 
     @property
     def service_type(self):
@@ -171,6 +178,30 @@ class ServiceFilter(dict):
     @path.setter
     def path(self, value):
         self['path'] = value
+
+    @property
+    def microversion(self):
+        return self['microversion']
+
+    @microversion.setter
+    def microversion(self, value):
+        self['microversion'] = value
+
+    @property
+    def min_version(self):
+        return self['min_version']
+
+    @min_version.setter
+    def min_version(self, value):
+        self['min_version'] = value
+
+    @property
+    def max_version(self):
+        return self['max_version']
+
+    @max_version.setter
+    def max_version(self, value):
+        self['max_version'] = value
 
     def get_path(self, version=None):
         if not self.version:
