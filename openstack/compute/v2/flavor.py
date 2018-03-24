@@ -12,6 +12,7 @@
 
 from openstack.compute import compute_service
 from openstack import resource2
+from openstack import utils
 
 
 class Flavor(resource2.Resource):
@@ -53,6 +54,26 @@ class Flavor(resource2.Resource):
     is_disabled = resource2.Body('OS-FLV-DISABLED:disabled', type=bool)
     #: The bandwidth scaling factor this flavor receives on the network.
     rxtx_factor = resource2.Body('rxtx_factor', type=float)
+
+    def get_extra_specs(self, session):
+        """Retrieve the extra specs of this flavor
+
+        :param session: The session to use for this request
+
+        :returns: A direction of the extra specs
+        :rtype: dict
+        """
+        # If we're in a FlavorDetail, we need to pop the "detail" portion
+        # of the URL off and then everything else will work the same.
+        pos = self.base_path.find("detail")
+        if pos != -1:
+            base = self.base_path[:pos]
+        else:
+            base = self.base_path
+        url = utils.urljoin(base, self.id, 'os-extra_specs')
+        response = session.get(url, endpoint_filter=self.service)
+        specs = response.json()
+        return specs.get('extra_specs', {})
 
 
 class FlavorDetail(Flavor):

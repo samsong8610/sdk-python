@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 import testtools
 
 from openstack.compute.v2 import flavor
@@ -31,6 +32,12 @@ BASIC_EXAMPLE = {
 
 
 class TestFlavor(testtools.TestCase):
+
+    def setUp(self):
+        super(TestFlavor, self).setUp()
+        self.extra_specs = {
+            'extra_specs': {'key1': 'value1', 'key2': 'value2'}
+        }
 
     def test_basic(self):
         sot = flavor.Flavor()
@@ -80,3 +87,23 @@ class TestFlavor(testtools.TestCase):
         self.assertFalse(sot.allow_update)
         self.assertFalse(sot.allow_delete)
         self.assertTrue(sot.allow_list)
+
+    def test_get_extra_specs_by_flavor(self):
+        sot = flavor.Flavor(id=IDENTIFIER)
+        self._test_get_extra_specs(sot)
+
+    def test_get_extra_specs_by_flavor_detail(self):
+        sot = flavor.FlavorDetail(id=IDENTIFIER)
+        self._test_get_extra_specs(sot)
+
+    def _test_get_extra_specs(self, sot):
+        response = mock.Mock()
+        response.json.return_value = self.extra_specs
+        sess = mock.Mock()
+        sess.get.return_value = response
+
+        result = sot.get_extra_specs(sess)
+
+        self.assertEqual(result, self.extra_specs["extra_specs"])
+        sess.get.assert_called_once_with("flavors/IDENTIFIER/os-extra_specs",
+                                         endpoint_filter=sot.service)
