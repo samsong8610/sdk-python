@@ -896,20 +896,22 @@ class Proxy(proxy2.BaseProxy):
 
         return self._list(az, paginated=False)
 
-    def get_server_metadata(self, server):
+    def get_server_metadata(self, server, key=None):
         """Return a dictionary of metadata for a server
 
         :param server: Either the ID of a server or a
                        :class:`~openstack.compute.v2.server.Server` or
                        :class:`~openstack.compute.v2.server.ServerDetail`
                        instance.
+        :param key: The key of the metadata to get. If ``None``, return all.
+        :type key: str or ``None``
 
         :returns: A :class:`~openstack.compute.v2.server.Server` with only the
                   server's metadata. All keys and values are Unicode text.
         :rtype: :class:`~openstack.compute.v2.server.Server`
         """
         res = self._get_base_resource(server, _server.Server)
-        metadata = res.get_metadata(self._session)
+        metadata = res.get_metadata(self._session, key=key)
         result = _server.Server.existing(id=res.id, metadata=metadata)
         return result
 
@@ -933,6 +935,25 @@ class Proxy(proxy2.BaseProxy):
         metadata = res.set_metadata(self._session, **metadata)
         result = _server.Server.existing(id=res.id, metadata=metadata)
         return result
+
+    def update_server_metadata(self, server, key, value):
+        """Creates or replaces a metadata item, by key
+
+        :param server: Either the ID of a server or a
+                       :class:`~openstack.compute.v2.server.Server` or
+                       :class:`~openstack.compute.v2.server.ServerDetail`
+                       instance.
+        :param str key: The key of the metadata to update.
+        :param str value: The new value of the metadata.
+
+        :returns: A :class:`~openstack.compute.v2.server.Server` with only the
+                  updated server's metadata.
+                  All keys and values are Unicode text.
+        :rtype: :class:`~openstack.compute.v2.server.Server`
+        """
+        res = self._get_base_resource(server, _server.Server)
+        updated = res.update_metadata(self._session, key, value)
+        return _server.Server.existing(id=res.id, metadata=updated)
 
     def delete_server_metadata(self, server, keys):
         """Delete metadata for a server

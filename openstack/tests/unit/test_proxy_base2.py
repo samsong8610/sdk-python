@@ -155,7 +155,10 @@ class TestProxyBase(base.TestCase):
     def verify_find(self, test_method, resource_type, value=None,
                     mock_method="openstack.proxy2.BaseProxy._find",
                     path_args=None, **kwargs):
-        method_args = value or ["name_or_id"]
+        method_args = ["name_or_id"]
+        if value:
+            method_args = value if isinstance(value, list) else [value]
+        expected_args = [resource_type] + method_args
         expected_kwargs = {}
 
         self._add_path_args_for_verify(path_args, method_args, expected_kwargs,
@@ -166,7 +169,7 @@ class TestProxyBase(base.TestCase):
         expected_kwargs["ignore_missing"] = False
         self._verify2(mock_method, test_method,
                       method_args=method_args + [False],
-                      expected_args=[resource_type, "name_or_id"],
+                      expected_args=expected_args,
                       expected_kwargs=expected_kwargs,
                       expected_result="result",
                       **kwargs)
@@ -174,7 +177,7 @@ class TestProxyBase(base.TestCase):
         expected_kwargs["ignore_missing"] = True
         self._verify2(mock_method, test_method,
                       method_args=method_args + [True],
-                      expected_args=[resource_type, "name_or_id"],
+                      expected_args=expected_args,
                       expected_kwargs=expected_kwargs,
                       expected_result="result",
                       **kwargs)

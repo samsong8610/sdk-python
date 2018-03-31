@@ -15,13 +15,14 @@ import testtools
 from openstack.compute.v2 import volume_attachment
 
 EXAMPLE = {
-    'device': '1',
-    'id': '2',
-    'volume_id': '3',
+    'device': '/dev/sdc',
+    'id': 'a26887c6-c47b-4654-abb5-dfadf7d3f803',
+    'serverId': '4d8c3732-a248-40ed-bebc-539a6ffd25c0',
+    'volumeId': 'a26887c6-c47b-4654-abb5-dfadf7d3f803',
 }
 
 
-class TestServerInterface(testtools.TestCase):
+class TestVolumeAttachment(testtools.TestCase):
 
     def test_basic(self):
         sot = volume_attachment.VolumeAttachment()
@@ -44,4 +45,5 @@ class TestServerInterface(testtools.TestCase):
         sot = volume_attachment.VolumeAttachment(**EXAMPLE)
         self.assertEqual(EXAMPLE['device'], sot.device)
         self.assertEqual(EXAMPLE['id'], sot.id)
-        self.assertEqual(EXAMPLE['volume_id'], sot.volume_id)
+        self.assertEqual(EXAMPLE['serverId'], sot.server_id)
+        self.assertEqual(EXAMPLE['volumeId'], sot.volume_id)

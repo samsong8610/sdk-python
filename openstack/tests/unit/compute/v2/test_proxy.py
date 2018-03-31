@@ -412,6 +412,7 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                       method_args=["value"],
                       method_result=server.Server(id="value", metadata={}),
                       expected_args=[self.session],
+                      expected_kwargs={"key": None},
                       expected_result={})
 
     def test_set_server_metadata(self):
@@ -426,6 +427,18 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                       expected_args=[self.session],
                       expected_kwargs=kwargs,
                       expected_result=kwargs)
+
+    def test_update_server_metadata(self):
+        key = "key1"
+        value = "value1"
+        metadata = {"a": "1", key: value}
+        self._verify2("openstack.compute.v2.server.Server.update_metadata",
+                      self.proxy.update_server_metadata,
+                      method_args=[id, key, value],
+                      method_result=server.Server.existing(id=id,
+                                                           metadata=metadata),
+                      expected_args=[self.session, key, value],
+                      expected_result=metadata)
 
     def test_delete_server_metadata(self):
         self._verify2("openstack.compute.v2.server.Server.delete_metadata",
