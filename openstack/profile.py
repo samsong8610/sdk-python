@@ -89,6 +89,7 @@ from openstack.smn import smn_service
 from openstack.telemetry.alarm import alarm_service
 from openstack.telemetry import telemetry_service
 from openstack.volume_backup import volume_backup_service
+from openstack.vpc import vpc_service
 from openstack.workflow import workflow_service
 
 _logger = logging.getLogger(__name__)
@@ -145,6 +146,8 @@ class Profile(object):
         vbs_v2 = volume_backup_service.VolumeBackupService(version="v2")
         self._add_service(vbs_v2)
         self._add_service(map_reduce_service.MapReduceService(version="v1"))
+        # Note(samsong8610): Override network service with VPC service.
+        self._add_service(vpc_service.VPCService("v1"))
 
         if plugins:
             for plugin in plugins:
