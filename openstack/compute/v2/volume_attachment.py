@@ -27,6 +27,7 @@ class VolumeAttachment(resource2.Resource):
     allow_delete = True
     allow_list = True
 
+    # Fixme(samsong8610): Does the list API support these query parameters?
     _query_mapping = resource2.QueryParameters("limit", "offset")
 
     #: Name of the device such as, /dev/vdb.
@@ -34,8 +35,6 @@ class VolumeAttachment(resource2.Resource):
     #: The ID of the attachment.
     id = resource2.Body('id')
     #: The ID for the server.
-    server_id = resource2.URI('server_id')
+    server_id = resource2.URI('serverId')
     #: The ID of the attached volume.
     volume_id = resource2.Body('volumeId')
-    #: The ID of the attachment you want to delete or update.
-    attachment_id = resource2.Body('attachment_id', alternate_id=True)

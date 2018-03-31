@@ -12,11 +12,12 @@
 
 from openstack.compute import compute_service
 from openstack.compute.v2 import metadata
+from openstack.compute.v2 import tag
 from openstack import resource2
 from openstack import utils
 
 
-class Server(resource2.Resource, metadata.MetadataMixin):
+class Server(resource2.Resource, metadata.MetadataMixin, tag.TagMixin):
     resource_key = 'server'
     resources_key = 'servers'
     base_path = '/servers'
