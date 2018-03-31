@@ -586,6 +586,9 @@ class Resource(object):
         instance contains a resource_key and prepend_key=True,
         the body will be wrapped in a dict with that key.
 
+        # Note(samsong8610): If the uri contains project_id URI attribute,
+        # replace it with the actual project id which is fetched from session.
+
         Return a _Request object that contains the constructed URI
         as well a body and headers that are ready to send.
         Only dirty body and header contents will be returned.

@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# -*- coding:utf-8 -*-
-
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -17,33 +14,26 @@ from openstack import resource2 as resource
 from openstack.vpc import vpc_service
 
 
-class Version(resource.Resource):
-    resource_key = 'version'
-    resources_key = 'versions'
-    base_path = '/'
-    service = vpc_service.VpcService(
-        version=vpc_service.VpcService.UNVERSIONED
-    )
+class Quota(resource.Resource):
+    resource_key = 'quota'
+    resources_key = 'quotas.resources'
+    base_path = '/%(project_id)s/quotas'
+    service = vpc_service.VPCService()
 
     # capabilities
+    allow_get = False
+    allow_update = False
+    allow_delete = False
     allow_list = True
 
-    # Properties
-    links = resource.Body('links')
-    status = resource.Body('status')
-
-
-class VersionV1(resource.Resource):
-    resource_key = 'version'
-    resources_key = 'versions'
-    base_path = '/'
-    service = vpc_service.VpcServiceV1(
-        version=vpc_service.VpcServiceV1.UNVERSIONED
-    )
-
-    # capabilities
-    allow_list = True
+    _query_mapping = resource.QueryParameters('type')
 
     # Properties
-    links = resource.Body('links')
-    status = resource.Body('status')
+    #: The resource type.
+    type = resource.Body('type')
+    #: The number of created network resources.
+    used = resource.Body('used')
+    #: The maximum quota values for the resources.
+    quota = resource.Body('quota')
+    #: The minimum quota value allowed.
+    min = resource.Body('min')

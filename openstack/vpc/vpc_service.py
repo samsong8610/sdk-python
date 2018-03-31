@@ -25,3 +25,17 @@ class VpcService(service_filter.ServiceFilter):
         super(VpcService, self).__init__(service_type='vpcv2.0',
                                          requires_project_id=True,
                                          version=version)
+
+
+class VpcServiceV1(service_filter.ServiceFilter):
+    """The VPC service v1."""
+
+    valid_versions = [service_filter.ValidVersion('v1')]
+
+    def __init__(self, version=None):
+        """Create a VPC service."""
+        super(VpcService, self).__init__(
+            service_type='vpc',
+            version=version,
+            requires_project_id=True
+        )
