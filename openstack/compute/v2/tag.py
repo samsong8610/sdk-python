@@ -18,7 +18,7 @@ from openstack import utils
 
 class TagMixin(object):
 
-    def _tag(self, method, key=None, delete=False, tags=None):
+    def _tag(self, method, key=None, delete=False, tags=None, session=None):
         if tags:
             for v in tags:
                 if not isinstance(v, six.string_types):
@@ -38,15 +38,20 @@ class TagMixin(object):
         else:
             url = utils.urljoin(base, self.id, "tags")
 
-        kwargs = {"endpoint_filter": self.service}
+        endpoint_filter = self.get_endpoint_filter(self, session)
+        endpoint_override = self.service.get_endpoint_override()
+        kwargs = {"endpoint_filter": endpoint_filter,
+                  "microversion": endpoint_filter.microversion,
+                  "endpoint_override": endpoint_override}
         if tags:
             kwargs["json"] = {'tags': tags}
         headers = {"Accept": ""} if delete else {}
 
         response = method(url, headers=headers, **kwargs)
 
-        # DELETE doesn't return a JSON body while everything else does.
-        return response.json() if not delete or key is None else None
+        # DELETE doesn't return a JSON body
+        # PUT a special tag doesn't return a JSON body
+        return response.json() if not delete and key is None else None
 
     def list_tags(self, session):
         """List all tags of the server
@@ -57,7 +62,7 @@ class TagMixin(object):
         :returns: A list of the requested tags. All tags are Unicode text.
         :rtype: list
         """
-        result = self._tag(session.get)
+        result = self._tag(session.get, session=session)
         return result['tags']
 
     def set_tags(self, session, *tags):
@@ -73,7 +78,7 @@ class TagMixin(object):
         if not tags:
             return list()
 
-        result = self._tag(session.put, tags=list(tags))
+        result = self._tag(session.put, tags=list(tags), session=session)
         return result['tags']
 
     def delete_tags(self, session):
@@ -84,7 +89,7 @@ class TagMixin(object):
 
         :rtype: ``None``
         """
-        self._tag(session.delete, delete=True)
+        self._tag(session.delete, delete=True, session=session)
 
     def has_tag(self, session, tag):
         """Checks tag existence on the server
@@ -100,7 +105,7 @@ class TagMixin(object):
             return False
 
         try:
-            self._tag(session.get, key=tag)
+            self._tag(session.get, key=tag, session=session)
             return True
         except exceptions.NotFound:
             return False
@@ -114,7 +119,7 @@ class TagMixin(object):
 
         :rtype: ``None``
         """
-        self._tag(session.put, key=tag)
+        self._tag(session.put, key=tag, session=session)
 
     def delete_tag(self, session, tag):
         """Deletes a single tag from the server
@@ -125,4 +130,4 @@ class TagMixin(object):
 
         :rtype: ``None``
         """
-        self._tag(session.delete, key=tag, delete=True)
+        self._tag(session.delete, key=tag, delete=True, session=session)

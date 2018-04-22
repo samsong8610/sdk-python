@@ -143,6 +143,7 @@ class TestConnection(base.TestCase):
                          conn.identity.__class__.__module__)
         self.assertEqual('openstack.image.v2._proxy',
                          conn.image.__class__.__module__)
+        # TODO(samsong8610): how to load vpc proxy?
         self.assertEqual('openstack.network.v2._proxy',
                          conn.network.__class__.__module__)
         self.assertEqual('openstack.object_store.v1._proxy',
@@ -205,6 +206,11 @@ class TestConnection(base.TestCase):
 
         class Opts(object):
             compute_api_version = version
+            compute_microversion = '2.3'
+            compute_min_version = '2.1'
+            compute_max_version = '2.26'
+            compute_service_name = 'ecs'
+            compute_interface = 'INTERNAL'
 
         sot = connection.from_config(cloud_name="sample", options=Opts)
 
@@ -213,6 +219,11 @@ class TestConnection(base.TestCase):
         # NOTE: Along the way, the `v` prefix gets added so we can build
         # up URLs with it.
         self.assertEqual("v" + version, pref.version)
+        self.assertEqual('2.3', pref.microversion)
+        self.assertEqual('2.1', pref.min_version)
+        self.assertEqual('2.26', pref.max_version)
+        self.assertEqual('ecs', pref.service_name)
+        self.assertEqual('INTERNAL', pref.interface)
 
     def test_from_config_verify(self):
         self._prepare_test_config()
@@ -242,3 +253,8 @@ class TestConnection(base.TestCase):
                                     authenticator=mock.Mock())
         res = sot.authorize()
         self.assertIsNone(res)
+
+    def test__make_config_key(self):
+        key = 'key'
+        actual = connection._make_config_key(None, key)
+        self.assertEqual(key, actual)
