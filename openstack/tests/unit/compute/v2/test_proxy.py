@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
+
 from openstack.compute.v2 import _proxy
 from openstack.compute.v2 import availability_zone as az
 from openstack.compute.v2 import extension
@@ -23,6 +25,8 @@ from openstack.compute.v2 import server_group
 from openstack.compute.v2 import server_interface
 from openstack.compute.v2 import server_ip
 from openstack.compute.v2 import service
+from openstack.compute.v2 import volume_attachment
+from openstack.exceptions import SDKException
 from openstack.tests.unit import test_proxy_base2
 
 
@@ -286,6 +290,20 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                      expected_kwargs={"metadata": {"k1": "v1"},
                                       "image": id})
 
+    def test_add_security_group_to_server(self):
+        method = "openstack.compute.v2.server.Server.add_security_group"
+        self._verify(method,
+                     self.proxy.add_security_group_to_server,
+                     method_args=["value", "security_group"],
+                     expected_args=["security_group"])
+
+    def test_remove_security_group_from_server(self):
+        method = "openstack.compute.v2.server.Server.remove_security_group"
+        self._verify(method,
+                     self.proxy.remove_security_group_from_server,
+                     method_args=["value", "security_group"],
+                     expected_args=["security_group"])
+
     def test_add_fixed_ip_to_server(self):
         self._verify("openstack.compute.v2.server.Server.add_fixed_ip",
                      self.proxy.add_fixed_ip_to_server,
@@ -510,3 +528,132 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                      self.proxy.force_service_down,
                      method_args=["value", "host1", "nova-compute"],
                      expected_args=["host1", "nova-compute"])
+
+    def test_volume_attachments(self):
+        the_args = ['server_id']
+        expected_args = [volume_attachment.VolumeAttachment]
+        expected_kwargs = {'serverId': 'server_id', 'paginated': False}
+        self._verify2('openstack.proxy2.BaseProxy._list',
+                      self.proxy.volume_attachments,
+                      method_args=the_args,
+                      expected_args=expected_args,
+                      expected_kwargs=expected_kwargs,
+                      expected_result=['result'])
+
+    def test_volume_attachment_get(self):
+        value = volume_attachment.VolumeAttachment(id='IDENTIFIER',
+                                                   server_id='server_id')
+        expected_args = [volume_attachment.VolumeAttachment, value]
+        expected_kwargs = {'ignore_missing': True}
+        self.verify_get(self.proxy.get_volume_attachment,
+                        volume_attachment.VolumeAttachment,
+                        value=[None, value],
+                        expected_args=expected_args,
+                        expected_kwargs=expected_kwargs)
+
+    def test_volume_attachment_get_with_server(self):
+        value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
+        expected_args = [volume_attachment.VolumeAttachment, value]
+        expected_kwargs = {'ignore_missing': True}
+        self.verify_get(self.proxy.get_volume_attachment,
+                        volume_attachment.VolumeAttachment,
+                        value=['server_id', value],
+                        expected_args=expected_args,
+                        expected_kwargs=expected_kwargs)
+
+    def test_volume_attachment_get_exception(self):
+        value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
+        self.assertRaises(SDKException, self.proxy.get_volume_attachment,
+                          None, value)
+
+    def test_volume_attachment_create(self):
+        method_kwargs = {'volume_id': 'IDENTIFIER',
+                         'device': '/dev/sda'}
+        expected_kwargs = {'volume_id': 'IDENTIFIER',
+                           'device': '/dev/sda',
+                           'server_id': 'server_id'}
+        self.verify_create(self.proxy.create_volume_attachment,
+                           volume_attachment.VolumeAttachment,
+                           method_args=['server_id'],
+                           method_kwargs=method_kwargs,
+                           expected_kwargs=expected_kwargs)
+
+    def test_volume_attachment_delete(self):
+        value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
+        expected_args = [volume_attachment.VolumeAttachment, value]
+        self.verify_delete(self.proxy.delete_volume_attachment,
+                           volume_attachment.VolumeAttachment,
+                           False,
+                           input_path_args=['server_id', value],
+                           expected_args=expected_args)
+
+        value.server_id = 'server_id'
+        self.verify_delete(self.proxy.delete_volume_attachment,
+                           volume_attachment.VolumeAttachment,
+                           False,
+                           input_path_args=[None, value],
+                           expected_args=expected_args)
+
+    def test_volume_attachment_delete_ignore(self):
+        value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
+        expected_args = [volume_attachment.VolumeAttachment, value]
+        self.verify_delete(self.proxy.delete_volume_attachment,
+                           volume_attachment.VolumeAttachment,
+                           True,
+                           input_path_args=['server_id', value],
+                           expected_args=expected_args)
+
+        value.server_id = 'server_id'
+        self.verify_delete(self.proxy.delete_volume_attachment,
+                           volume_attachment.VolumeAttachment,
+                           True,
+                           input_path_args=[None, value],
+                           expected_args=expected_args)
+
+    def test_server_tags(self):
+        self._verify2("openstack.compute.v2.server.Server.list_tags",
+                      self.proxy.server_tags,
+                      method_args=["value"],
+                      method_result=server.Server(id="value", tags=[]),
+                      expected_args=[self.session],
+                      expected_result=[])
+
+    def test_set_server_tags(self):
+        args = ['tag1', 'tag2']
+        id = "an_id"
+        self._verify2("openstack.compute.v2.server.Server.set_tags",
+                      self.proxy.set_server_tags,
+                      method_args=[id] + args,
+                      method_result=server.Server.existing(id=id,
+                                                           tags=args),
+                      expected_args=[self.session] + args,
+                      expected_result=args)
+
+    @mock.patch("openstack.compute.v2.server.Server.list_tags")
+    @mock.patch("openstack.compute.v2.server.Server.add_tag")
+    def test_add_server_tag(self, mock_add, mock_list):
+        mock_list.return_value = []
+        self.proxy.add_server_tag("id", "tag1")
+        mock_add.assert_called_once_with(self.session, "tag1")
+        mock_list.assert_called_once_with(self.session)
+
+    def test_delete_server_tag(self):
+        self._verify2("openstack.compute.v2.server.Server.delete_tag",
+                      self.proxy.delete_server_tag,
+                      expected_result=server.Server.existing(id="id"),
+                      method_args=["id", "tag"],
+                      expected_args=[self.session, "tag"])
+
+    def test_clean_server_tags(self):
+        self._verify2("openstack.compute.v2.server.Server.delete_tags",
+                      self.proxy.clean_server_tags,
+                      method_args=["id"],
+                      method_result=server.Server.existing(id="id"),
+                      expected_args=[self.session])
+
+    def test_has_server_tag(self):
+        self._verify2("openstack.compute.v2.server.Server.has_tag",
+                      self.proxy.has_server_tag,
+                      method_args=["id", "tag1"],
+                      method_result=False,
+                      expected_args=[self.session, "tag1"])

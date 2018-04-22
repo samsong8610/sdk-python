@@ -28,7 +28,7 @@ class TestVolumeAttachment(testtools.TestCase):
         sot = volume_attachment.VolumeAttachment()
         self.assertEqual('volumeAttachment', sot.resource_key)
         self.assertEqual('volumeAttachments', sot.resources_key)
-        self.assertEqual('/servers/%(server_id)s/os-volume_attachments',
+        self.assertEqual('/servers/%(serverId)s/os-volume_attachments',
                          sot.base_path)
         self.assertEqual('compute', sot.service.service_type)
         self.assertTrue(sot.allow_create)
@@ -37,7 +37,6 @@ class TestVolumeAttachment(testtools.TestCase):
         self.assertTrue(sot.allow_delete)
         self.assertTrue(sot.allow_list)
         self.assertDictEqual({"limit": "limit",
-                              "offset": "offset",
                               "marker": "marker"},
                              sot._query_mapping._mapping)
 

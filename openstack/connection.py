@@ -123,6 +123,21 @@ def from_config(cloud_name=None, cloud_config=None, options=None):
                 if not version.startswith("v"):
                     version = "v" + version
                 prof.set_version(service, version)
+
+            # NOTE(samsong8610): Setting properties for microversion filtering
+            microversion_key = _make_config_key(service, 'microversion')
+            microversion = getattr(cloud_config, microversion_key)
+            if microversion:
+                prof.set_microversion(service, str(microversion))
+            min_version_key = _make_config_key(service, 'min_version')
+            min_version = getattr(cloud_config, min_version_key)
+            if min_version:
+                prof.set_min_version(service, str(min_version))
+            max_version_key = _make_config_key(service, 'max_version')
+            max_version = getattr(cloud_config, max_version_key)
+            if max_version:
+                prof.set_max_version(service, str(max_version))
+
             name = cloud_config.get_service_name(service)
             if name:
                 prof.set_name(service, name)
@@ -153,6 +168,14 @@ def from_config(cloud_name=None, cloud_config=None, options=None):
         auth['cert'] = (cert, key) if key else cert
 
     return Connection(profile=prof, **auth)
+
+
+def _make_config_key(service_type, key):
+    if not service_type:
+        return key
+    else:
+        service_type = service_type.lower().replace('-', '_')
+        return "_".join([service_type, key])
 
 
 class Connection(object):

@@ -42,7 +42,8 @@ class Resource(resource.Resource):
 
     # overwrite resource2._prepare_request as maas requires header
     # to have Content-type
-    def _prepare_request(self, requires_id=True, prepend_key=False):
+    def _prepare_request(self, requires_id=True, prepend_key=False,
+                         session=None):
         body = self._body.dirty
         if prepend_key and self.resource_key is not None:
             body = {self.resource_key: body}

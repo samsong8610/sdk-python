@@ -588,7 +588,7 @@ class Resource(object):
         headers = self._header.dirty
 
         uri_attrs = self._uri.attributes
-        if '%(project_id)s' in self.base_path:
+        if '%(project_id)s' in self.base_path and session:
             uri_attrs.update(project_id=session.get_project_id())
         uri = self.base_path % uri_attrs
         if requires_id:
@@ -648,20 +648,25 @@ class Resource(object):
             raise exceptions.MethodNotSupported(self, "create")
 
         endpoint_override = self.service.get_endpoint_override()
+        endpoint_filter = self.get_endpoint_filter(self, session)
         if self.put_create:
             request = self._prepare_request(requires_id=True,
                                             prepend_key=prepend_key,
                                             session=session)
-            response = session.put(request.uri, endpoint_filter=self.service,
+            response = session.put(request.uri,
+                                   endpoint_filter=endpoint_filter,
                                    endpoint_override=endpoint_override,
-                                   json=request.body, headers=request.headers)
+                                   json=request.body, headers=request.headers,
+                                   microversion=endpoint_filter.microversion)
         else:
             request = self._prepare_request(requires_id=False,
                                             prepend_key=prepend_key,
                                             session=session)
-            response = session.post(request.uri, endpoint_filter=self.service,
+            response = session.post(request.uri,
+                                    endpoint_filter=endpoint_filter,
                                     endpoint_override=endpoint_override,
-                                    json=request.body, headers=request.headers)
+                                    json=request.body, headers=request.headers,
+                                    microversion=endpoint_filter.microversion)
 
         self._translate_response(response)
         return self
@@ -683,8 +688,10 @@ class Resource(object):
         request = self._prepare_request(requires_id=requires_id,
                                         session=session)
         endpoint_override = self.service.get_endpoint_override()
-        response = session.get(request.uri, endpoint_filter=self.service,
-                               endpoint_override=endpoint_override)
+        endpoint_filter = self.get_endpoint_filter(self, session)
+        response = session.get(request.uri, endpoint_filter=endpoint_filter,
+                               endpoint_override=endpoint_override,
+                               microversion=endpoint_filter.microversion)
 
         self._translate_response(response)
         return self
@@ -705,9 +712,11 @@ class Resource(object):
         request = self._prepare_request(session=session)
 
         endpoint_override = self.service.get_endpoint_override()
-        response = session.head(request.uri, endpoint_filter=self.service,
+        endpoint_filter = self.get_endpoint_filter(self, session)
+        response = session.head(request.uri, endpoint_filter=endpoint_filter,
                                 endpoint_override=endpoint_override,
-                                headers={"Accept": ""})
+                                headers={"Accept": ""},
+                                microversion=endpoint_filter.microversion)
 
         self._translate_response(response)
         return self
@@ -741,15 +750,20 @@ class Resource(object):
                                         session=session)
 
         endpoint_override = self.service.get_endpoint_override()
+        endpoint_filter = self.get_endpoint_filter(self, session)
         if self.patch_update:
-            response = session.patch(request.uri, endpoint_filter=self.service,
+            response = session.patch(request.uri,
+                                     endpoint_filter=endpoint_filter,
                                      endpoint_override=endpoint_override,
                                      json=request.body,
-                                     headers=request.headers)
+                                     headers=request.headers,
+                                     microversion=endpoint_filter.microversion)
         else:
-            response = session.put(request.uri, endpoint_filter=self.service,
+            response = session.put(request.uri,
+                                   endpoint_filter=endpoint_filter,
                                    endpoint_override=endpoint_override,
-                                   json=request.body, headers=request.headers)
+                                   json=request.body, headers=request.headers,
+                                   microversion=endpoint_filter.microversion)
 
         self._translate_response(response, has_body=has_body)
         return self
@@ -772,10 +786,12 @@ class Resource(object):
         request = self._prepare_request(session=session)
 
         endpoint_override = self.service.get_endpoint_override()
-        response = session.delete(request.uri, endpoint_filter=self.service,
+        endpoint_filter = self.get_endpoint_filter(self, session)
+        response = session.delete(request.uri, endpoint_filter=endpoint_filter,
                                   endpoint_override=endpoint_override,
                                   headers={"Accept": ""},
-                                  params=params)
+                                  params=params,
+                                  microversion=endpoint_filter.microversion)
 
         self._translate_response(response, has_body=has_body)
         return self
@@ -845,10 +861,12 @@ class Resource(object):
 
         while more_data:
             endpoint_override = cls.service.get_endpoint_override()
-            resp = session.get(uri, endpoint_filter=cls.service,
+            endpoint_filter = cls.get_endpoint_filter(cls, session)
+            resp = session.get(uri, endpoint_filter=endpoint_filter,
                                endpoint_override=endpoint_override,
                                headers={"Accept": "application/json"},
-                               params=query_params)
+                               params=query_params,
+                               microversion=endpoint_filter.microversion)
             response_json = resp.json()
             if cls.resources_key:
                 resources = cls.find_value_by_accessor(response_json,
@@ -969,6 +987,13 @@ class Resource(object):
             return None
         raise exceptions.ResourceNotFound(
             "No %s found for %s" % (cls.__name__, name_or_id))
+
+    @staticmethod
+    def get_endpoint_filter(cls, session):
+        endpoint_filter = session.get_service(cls.service.service_type)
+        if endpoint_filter:
+            return endpoint_filter
+        return cls.service
 
 
 def wait_for_status(session, resource, status,
