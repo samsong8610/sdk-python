@@ -17,7 +17,7 @@ from openstack import resource2
 class VolumeAttachment(resource2.Resource):
     resource_key = 'volumeAttachment'
     resources_key = 'volumeAttachments'
-    base_path = '/servers/%(server_id)s/os-volume_attachments'
+    base_path = '/servers/%(serverId)s/os-volume_attachments'
     service = compute_service.ComputeService()
 
     # capabilities
@@ -26,9 +26,6 @@ class VolumeAttachment(resource2.Resource):
     allow_update = False
     allow_delete = True
     allow_list = True
-
-    # Fixme(samsong8610): Does the list API support these query parameters?
-    _query_mapping = resource2.QueryParameters("limit", "offset")
 
     #: Name of the device such as, /dev/vdb.
     device = resource2.Body('device')

@@ -370,3 +370,16 @@ class Session(_session.Session):
         headers = kwargs.setdefault('headers', dict())
         headers.setdefault('Content-Type', 'application/json')
         return super(Session, self).request(*args, **kwargs)
+
+    def get_service(self, service_type):
+        """Get the service from the current session's profile.
+
+        The service will be used as endpoint_filter in each requests sent to
+        the desired service_type endpoint.
+
+        :param str service_type: The service type.
+        :returns: The service in the session's profile.
+        :rtype: The desired type service extended
+                :class:`~openstack.service_filter.ServiceFilter`
+        """
+        return self.profile.get_filter(service_type)
