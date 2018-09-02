@@ -50,6 +50,7 @@ class TestMetadata(testtools.TestCase):
         self.assertEqual(result, self.metadata_result["metadata"])
         sess.get.assert_called_once_with("servers/IDENTIFIER/metadata",
                                          headers={},
+                                         endpoint_override=None,
                                          endpoint_filter=sot.service)
 
     def test_set_metadata(self):
@@ -68,6 +69,7 @@ class TestMetadata(testtools.TestCase):
         sess.post.assert_called_once_with("servers/IDENTIFIER/metadata",
                                           endpoint_filter=sot.service,
                                           headers={},
+                                          endpoint_override=None,
                                           json={"metadata": set_meta})
 
     def test_delete_metadata(self):
@@ -83,6 +85,7 @@ class TestMetadata(testtools.TestCase):
         sess.delete.assert_called_once_with(
             "servers/IDENTIFIER/metadata/" + key,
             headers={"Accept": ""},
+            endpoint_override=None,
             endpoint_filter=sot.service)
 
     def test_get_metadata_by_key(self):
@@ -98,6 +101,7 @@ class TestMetadata(testtools.TestCase):
         self.assertEqual(self.meta_result['meta'], result)
         sess.get.assert_called_once_with("servers/IDENTIFIER/metadata/" + key,
                                          headers={},
+                                         endpoint_override=None,
                                          endpoint_filter=sot.service)
 
     def test_update_metadata_by_key(self):
@@ -116,4 +120,5 @@ class TestMetadata(testtools.TestCase):
         sess.put.assert_called_once_with("servers/IDENTIFIER/metadata/" + key,
                                          endpoint_filter=sot.service,
                                          headers={},
+                                         endpoint_override=None,
                                          json={"meta": meta})
