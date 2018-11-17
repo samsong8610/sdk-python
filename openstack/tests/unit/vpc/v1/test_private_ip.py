@@ -32,10 +32,10 @@ class TestPrivateIP(testtools.TestCase):
         sot = private_ip.PrivateIP()
         self.assertEqual('privateip', sot.resource_key)
         self.assertEqual('privateips', sot.resources_key)
-        self.assertEqual('/%(project_id)s/privateips', sot.base_path)
-        self.assertEqual('/%(project_id)s/subnets/%(subnet_id)s/privateips',
+        self.assertEqual('/privateips', sot.base_path)
+        self.assertEqual('/subnets/%(subnet_id)s/privateips',
                          sot.list_base_path)
-        self.assertEqual('network', sot.service.service_type)
+        self.assertEqual('vpc', sot.service.service_type)
         self.assertTrue(sot.allow_create)
         self.assertTrue(sot.allow_get)
         self.assertTrue(sot.allow_update)
@@ -65,7 +65,7 @@ class TestPrivateIP(testtools.TestCase):
                                    ip_address='192.168.0.3')
         sot.create(sess)
 
-        uri = sot.base_path % {'project_id': 'uuid'}
+        uri = sot.base_path
         expected_body = {
             'privateips': [{'subnet_id': 'subnet_id',
                             'ip_address': '192.168.0.3'}]

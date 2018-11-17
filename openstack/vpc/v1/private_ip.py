@@ -18,10 +18,10 @@ from openstack.vpc import vpc_service
 class PrivateIP(resource.Resource):
     resource_key = 'privateip'
     resources_key = 'privateips'
-    base_path = '/%(project_id)s/privateips'
+    base_path = '/privateips'
     # Note(samsong8610): The uri for listing is different from base_path
-    list_base_path = '/%(project_id)s/subnets/%(subnet_id)s/privateips'
-    service = vpc_service.VPCService()
+    list_base_path = '/subnets/%(subnet_id)s/privateips'
+    service = vpc_service.VpcServiceV1()
 
     # capabilities
     allow_create = True
@@ -36,7 +36,7 @@ class PrivateIP(resource.Resource):
     subnet_id = resource.URI('subnet_id')
     #: The project(tenant) ID of the operator.
     project_id = resource.Body('tenant_id')
-    #: The VM using the private IP address.
+    #: The VM or network device using the private IP address.
     device_owner = resource.Body('device_owner')
     #: The private IP address obtained.
     ip_address = resource.Body('ip_address')

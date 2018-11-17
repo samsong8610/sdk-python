@@ -20,8 +20,10 @@ class PublicIP(resource.Resource):
     resource_name = "public ip"
     resource_key = 'publicip'
     resources_key = 'publicips'
-    base_path = '/%(project_id)s/publicips'
-    service = vpc_service.VPCService()
+    base_path = '/publicips'
+    service = vpc_service.VpcServiceV1()
+
+    _query_mapping = resource.QueryParameters('ip_version')
 
     # capabilities
     allow_create = True
@@ -34,10 +36,16 @@ class PublicIP(resource.Resource):
     # BIND_ERROR, BINDING, PENDING_DELETE, PENDING_CREATE, NOTIFYING,
     # NOTIFY_DELETE, PENDING_UPDATE, DOWN, ACTIVE, ELB, ERROR, or UNKNOWN.
     status = resource.Body('status')
+    #: The extra infomation about the public ip.
+    profile = resource.Body('profile', type=dict)
     #: The type of the elastic IP address.
     type = resource.Body('type')
     #: The obtained elastic IP address.
     public_ip_address = resource.Body('public_ip_address')
+    #: The obtained elastic v6 version IP address.
+    public_ipv6_address = resource.Body('public_ipv6_address')
+    #: The IP address version, 4 or 6
+    ip_version = resource.Body('ip_version', int)
     #: The alternative name for public_ip_address.
     # Note(samsong8610): We need this attribute because the creation request
     # uses this attribute name.
@@ -63,6 +71,8 @@ class PublicIP(resource.Resource):
     #: The bandwidth charge mode.
     # Note(samsong8610): This attribute only exists in the creation request.
     bandwidth_charge_mode = resource.Body('bandwidth_charge_mode')
+    #: The enterprise project id of the VPC.
+    enterprise_project_id = resource.Body('enterprise_project_id')
 
     def create(self, session, prepend_key=True):
         """Create a remote resource based on this instance.
@@ -84,9 +94,9 @@ class PublicIP(resource.Resource):
         request = self._prepare_request(requires_id=False,
                                         prepend_key=prepend_key,
                                         session=session)
-        # Note(samsong8610): The body for the creation must contain 'publicip'
-        # and 'bandwidth' properties. This is not identical to the normal API
-        # body pattern.
+        # Note(samsong8610): The body for the creation must contain 'publicip',
+        # 'bandwidth' and 'enterprise_project_id' properties. This is not identical
+        # to the normal API body pattern.
         bandwidth = {}
         public_ip = request.body
         if prepend_key:
@@ -95,7 +105,12 @@ class PublicIP(resource.Resource):
             if k.startswith('bandwidth_'):
                 bandwidth[k[10:]] = public_ip[k]
                 del public_ip[k]
-        request.body = {self.resource_key: public_ip, 'bandwidth': bandwidth}
+            if k == 'enterprise_project_id':
+                enterprise_project_id = public_ip[k]
+                del public_ip[k]
+        request.body = {self.resource_key: public_ip,
+                        'bandwidth': bandwidth,
+                        'enterprise_project_id': enterprise_project_id}
 
         response = session.post(request.uri, endpoint_filter=self.service,
                                 endpoint_override=endpoint_override,

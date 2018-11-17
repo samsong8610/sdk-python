@@ -17,8 +17,8 @@ from openstack.vpc import vpc_service
 class Bandwidth(resource.Resource):
     resource_key = 'bandwidth'
     resources_key = 'bandwidths'
-    base_path = '/%(project_id)s/bandwidths'
-    service = vpc_service.VPCService()
+    base_path = '/bandwidths'
+    service = vpc_service.VpcServiceV1()
 
     # capabilities
     allow_create = False
@@ -41,3 +41,7 @@ class Bandwidth(resource.Resource):
     bandwidth_type = resource.Body('bandwidth_type')
     #: The charging mode.The value can be bandwidth or traffic.
     charge_mode = resource.Body('charge_mode')
+    #: The billing information when charging by period.
+    billing_info = resource.Body('billing_info')
+    #: The enterprise project id of the VPC.
+    enterprise_project_id = resource.Body('enterprise_project_id')

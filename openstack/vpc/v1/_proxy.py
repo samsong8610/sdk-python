@@ -32,6 +32,7 @@ class Proxy(proxy2.BaseProxy):
 
             * ``marker``: The resource ID of pagination query.
             * ``limit``: The number of records returned on each page.
+            * ``enterprise_project_id``: The ID of the enterprise project.
 
         :returns: A generator of network objects
         :rtype: :class:`~openstack.vpc.v1.vpc.VPC`
@@ -68,6 +69,11 @@ class Proxy(proxy2.BaseProxy):
                 The value ranges from 10.0.0.0/8 to 10.255.255.0/24,
                 172.16.0.0/12 to 172.31.255.0/24,
                 or 192.168.0.0/16 to 192.168.255.0/24.
+            * ``enterprise_project_id``: The id of the enterprise project
+                for the VPC.
+                The value is a string of UUID of ``0``. ``0`` means the default
+                enterprise project. Otherwise the value is the id of the
+                enterprise project. Max length is 36 bytes.
 
         :returns: The results of VPC creation
         :rtype: :class:`~openstack.vpc.v1.vpc.VPC`
@@ -92,6 +98,11 @@ class Proxy(proxy2.BaseProxy):
                 172.16.0.0/12 to 172.31.255.0/24,
                 or 192.168.0.0/16 to 192.168.255.0/24.
                 If ``cidr`` is not specified, ``name`` must be specified.
+            * ``enterprise_project_id``: The id of the enterprise project
+                for the VPC.
+                The value is a string of UUID of ``0``. ``0`` means the default
+                enterprise project. Otherwise the value is the id of the
+                enterprise project. Max length is 36 bytes.
 
         :returns: The updated VPC
         :rtype: :class:`~openstack.vpc.v1.vpc.VPC`
@@ -240,6 +251,7 @@ class Proxy(proxy2.BaseProxy):
 
             * ``limit``: The number of records returned on each page.
             * ``marker``: The resource ID of pagination query.
+            * ``ip_version``: The IP address version. 4: IPv4, 6: IPv6.
 
         :returns: A generator of elastic IP objects
         :rtype: :class:`~openstack.vpc.v1.public_ip.PublicIP`
@@ -269,6 +281,8 @@ class Proxy(proxy2.BaseProxy):
 
             * ``type``: The type of the elastic IP address. The value can
                 be '5_telcom', '5_union', '5_bgp', or '5_sbgp'. Mandatory.
+            * ``ip_version``: The IP address version, The available values
+                includes 4, 6. Optional, default to 4.
             * ``ip_address``: The elastic IP address to be obtained. Optional.
             * ``bandwidth_name``: The bandwidth name. The value is a string of
                 1 to 64 characters that can contain letters, digits,
@@ -286,6 +300,11 @@ class Proxy(proxy2.BaseProxy):
                 can be PER or WHOLE. Mandatory.
             * ``bandwidth_charge_mode``: The charging mode. The value can be
                 'bandwidth' or 'traffic'. Optional. Default to 'bandwidth'.
+            * ``enterprise_project_id``: The id of the enterprise project.
+                The value is a string of UUID of ``0``. ``0`` means the default
+                enterprise project. Otherwise the value is the id of the
+                enterprise project. Max length is 36 bytes.
+                Optional.
 
         :returns: The results of elastic IP creation
         :rtype: :class:`~openstack.vpc.v1.public_ip.PublicIP`
@@ -321,6 +340,27 @@ class Proxy(proxy2.BaseProxy):
         """
         res = self._get_resource(_public_ip.PublicIP, public_ip)
         res.port_id = None
+        res.update(self._session)
+        return res
+
+    def update_public_ip(self, public_ip, **attrs):
+        """Update the elastic ip
+
+        :param public_ip: The value can be the ID of a elastic ip or a
+            :class:`~openstack.vpc.v1.public_ip.PublicIP`
+            instance.
+        :param dict attrs:
+        :param dict attrs: The attributes to update on the ip represented
+            by ``public_ip``. Available attributes include:
+
+            * ``ip_version``: The ip address version. The available values
+                includes: 4, 6.
+
+        :returns: The updated elastic ip
+        :rtype: :class:`~openstack.vpc.v1.public_ip.PublicIP`
+        """
+        res = self._get_resource(_public_ip.PublicIP, public_ip)
+        res.ip_version = attrs.get('ip_version')
         res.update(self._session)
         return res
 
@@ -594,7 +634,7 @@ class Proxy(proxy2.BaseProxy):
                 of 1 to 64 characters that can contain letters, digits,
                 underscores (_), and hyphens (-).
             * ``size``: The bandwidth size. The value ranges from 1 Mbit/s
-                to 300 Mbit/s.
+                to 2000 Mbit/s. Optional.
 
             Either parameter `size` or `name` must be set.
 
@@ -623,13 +663,16 @@ class Proxy(proxy2.BaseProxy):
         :param dict query: Optional query parameters to be sent to limit
                            the resources being returned. Valid parameters are:
 
+            * ``limit``: The number of records returned on each page.
+            * ``marker``: The resource ID of pagination query.
             * ``vpc_id``: The ID of the VPC this security group is
                           associated with.
+            * ``enterprise_project_id``: The ID of the enterprise project.
 
         :returns: A generator of security group objects
         :rtype: :class:`~openstack.vpc.v1.security_group.SecurityGroup`
         """
-        return self._list(_security_group.SecurityGroup, paginated=False,
+        return self._list(_security_group.SecurityGroup, paginated=True,
                           **query)
 
     def create_security_group(self, **attrs):
@@ -709,6 +752,8 @@ class Proxy(proxy2.BaseProxy):
             SecurityGroupRule class. Available attributes include:
 
             * ``security_group_id``: The security group ID. Mandatory.
+            * ``description``: The extra readable information about the rule.
+                Optional.
             * ``direction``: The direction of access control. The value can be
                 'egress' or 'ingress'. Mandatory.
             * ``ethertype``: The version of the Internet Protocol. The value
@@ -808,8 +853,8 @@ class Proxy(proxy2.BaseProxy):
 
             * ``type``: he resource type. The value can be 'vpc', 'subnet',
                 'securityGroup', 'securityGroupRule', 'publicIp', 'vpn',
-                'physicalConnect', 'virtualInterface', 'vpcPeer',
-                'loadbalancer', 'listener', 'firewall', or 'shareBandwidthIP'.
+                'vpngw', 'vpcPeer', 'firewall', 'shareBandwidth',
+                'shareBandwidthIP'.
 
         :returns: A generator of quota objects
         :rtype: :class:`~openstack.vpc.v1.quota.Quota`

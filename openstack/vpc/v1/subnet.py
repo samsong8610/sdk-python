@@ -20,12 +20,12 @@ from openstack.vpc import vpc_service
 class Subnet(resource.Resource):
     resource_key = 'subnet'
     resources_key = 'subnets'
-    base_path = '/%(project_id)s/subnets'
+    base_path = '/subnets'
     # Note(samsong8610): The path for update and delete requests is different
     # from the base_path
-    update_base_path = '/%(project_id)s/vpcs/%(vpc_id)s/subnets'
-    delete_base_path = '/%(project_id)s/vpcs/%(vpc_id)s/subnets'
-    service = vpc_service.VPCService()
+    update_base_path = '/vpcs/%(vpc_id)s/subnets'
+    delete_base_path = '/vpcs/%(vpc_id)s/subnets'
+    service = vpc_service.VpcServiceV1()
 
     # capabilities
     allow_create = True

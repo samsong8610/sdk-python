@@ -29,7 +29,9 @@ EXAMPLE = {
     ],
     "tenant_id": "8b7e35ad379141fc9df3e178bd64f55c",
     "bandwidth_type": "bgp",
-    "charge_mode": "bandwidth"
+    "charge_mode": "bandwidth",
+    "billing_info": "billing",
+    "enterprise_project_id": "0",
 }
 
 
@@ -39,8 +41,8 @@ class TestBandwidth(testtools.TestCase):
         sot = bandwidth.Bandwidth()
         self.assertEqual('bandwidth', sot.resource_key)
         self.assertEqual('bandwidths', sot.resources_key)
-        self.assertEqual('/%(project_id)s/bandwidths', sot.base_path)
-        self.assertEqual('network', sot.service.service_type)
+        self.assertEqual('/bandwidths', sot.base_path)
+        self.assertEqual('vpc', sot.service.service_type)
         self.assertFalse(sot.allow_create)
         self.assertTrue(sot.allow_get)
         self.assertTrue(sot.allow_update)
@@ -64,3 +66,6 @@ class TestBandwidth(testtools.TestCase):
         self.assertEqual(EXAMPLE['tenant_id'], sot.project_id)
         self.assertEqual(EXAMPLE['bandwidth_type'], sot.bandwidth_type)
         self.assertEqual(EXAMPLE['charge_mode'], sot.charge_mode)
+        self.assertEqual(EXAMPLE['billing_info'], sot.billing_info)
+        self.assertEqual(EXAMPLE['enterprise_project_id'],
+                         sot.enterprise_project_id)

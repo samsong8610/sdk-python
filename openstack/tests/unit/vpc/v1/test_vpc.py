@@ -21,6 +21,7 @@ EXAMPLE = {
     'cidr': '192.168.0.0/16',
     'status': 'OK',
     'routes': [{'destination': '0.0.0.0/0', 'nexthop': '4.4.4.4'}],
+    'enterprise_project_id': '0',
 }
 
 
@@ -30,8 +31,8 @@ class TestVPC(testtools.TestCase):
         sot = vpc.VPC()
         self.assertEqual('vpc', sot.resource_key)
         self.assertEqual('vpcs', sot.resources_key)
-        self.assertEqual('/%(project_id)s/vpcs', sot.base_path)
-        self.assertEqual('network', sot.service.service_type)
+        self.assertEqual('/vpcs', sot.base_path)
+        self.assertEqual('vpc', sot.service.service_type)
 
         self.assertTrue(sot.allow_create)
         self.assertTrue(sot.allow_get)
@@ -39,7 +40,8 @@ class TestVPC(testtools.TestCase):
         self.assertTrue(sot.allow_delete)
         self.assertTrue(sot.allow_list)
 
-        self.assertDictEqual({'limit': 'limit', 'marker': 'marker'},
+        self.assertDictEqual({'limit': 'limit', 'marker': 'marker',
+                              'enterprise_project_id': 'enterprise_project_id'},
                              sot._query_mapping._mapping)
 
     def test_make_it(self):
@@ -49,3 +51,5 @@ class TestVPC(testtools.TestCase):
         self.assertEqual(EXAMPLE['cidr'], sot.cidr)
         self.assertEqual(EXAMPLE['status'], sot.status)
         self.assertItemsEqual(EXAMPLE['routes'], sot.routes)
+        self.assertEqual(EXAMPLE['enterprise_project_id'],
+                         sot.enterprise_project_id)

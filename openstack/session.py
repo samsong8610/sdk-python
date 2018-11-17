@@ -327,9 +327,12 @@ class Session(_session.Session):
         so that they're only requested from the remote service once
         per instance of this class.
         """
+        requires_project_id = kwargs.get('requires_project_id', None)
         key = (service_type, interface)
         if key in self.endpoint_cache:
-            return self.endpoint_cache[key]
+            endpoint = self.adjust_endpoint(self.endpoint_cache[key],
+                                            requires_project_id)
+            return endpoint
 
         filt = self.profile.get_filter(service_type)
         if filt.interface is None:
@@ -360,9 +363,12 @@ class Session(_session.Session):
                           match, interface, service_type)
 
             self.endpoint_cache[key] = match
-            return match
+            endpoint = self.adjust_endpoint(match,
+                                            requires_project_id)
+            return endpoint
         except exceptions.EndpointNotFound:
-            return sc_endpoint
+            self.endpoint_cache[key] = sc_endpoint
+            return self.adjust_endpoint(sc_endpoint, requires_project_id)
 
     @map_exceptions
     def request(self, *args, **kwargs):
@@ -383,3 +389,17 @@ class Session(_session.Session):
                 :class:`~openstack.service_filter.ServiceFilter`
         """
         return self.profile.get_filter(service_type)
+
+    def adjust_endpoint(self, endpoint, requires_project_id=None):
+        """Remove the project id if the resource desired.
+
+        This should apply only to vpc.Port resource type.
+        """
+        if requires_project_id is not None and not requires_project_id:
+            project_id = self.get_project_id()
+            if endpoint.endswith(project_id):
+                # remove project id and trailing /
+                url = endpoint[:-1 - len(project_id)]
+                _logger.debug("Adjust endpoint to %s" % url)
+                return url
+        return endpoint

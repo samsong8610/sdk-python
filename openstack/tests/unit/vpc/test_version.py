@@ -29,7 +29,7 @@ class TestVersion(testtools.TestCase):
         self.assertEqual('version', sot.resource_key)
         self.assertEqual('versions', sot.resources_key)
         self.assertEqual('/', sot.base_path)
-        self.assertEqual('network', sot.service.service_type)
+        self.assertEqual('vpcv2.0', sot.service.service_type)
         self.assertFalse(sot.allow_create)
         self.assertFalse(sot.allow_get)
         self.assertFalse(sot.allow_update)
@@ -41,3 +41,18 @@ class TestVersion(testtools.TestCase):
         self.assertEqual(EXAMPLE['id'], sot.id)
         self.assertEqual(EXAMPLE['links'], sot.links)
         self.assertEqual(EXAMPLE['status'], sot.status)
+
+
+class TestVersionV1(testtools.TestCase):
+
+    def test_basic(self):
+        sot = version.VersionV1()
+        self.assertEqual('version', sot.resource_key)
+        self.assertEqual('versions', sot.resources_key)
+        self.assertEqual('/', sot.base_path)
+        self.assertEqual('vpc', sot.service.service_type)
+        self.assertFalse(sot.allow_create)
+        self.assertFalse(sot.allow_get)
+        self.assertFalse(sot.allow_update)
+        self.assertFalse(sot.allow_delete)
+        self.assertTrue(sot.allow_list)

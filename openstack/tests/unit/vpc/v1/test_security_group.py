@@ -34,7 +34,8 @@ EXAMPLE = {
             "remote_group_id": "16b6e77a-08fa-42c7-aa8b-106c048884e6",
             "security_group_id": "16b6e77a-08fa-42c7-aa8b-106c048884e6"
         }
-    ]
+    ],
+    "enterprise_project_id": "0",
 }
 
 
@@ -44,15 +45,16 @@ class TestSecurityGroup(testtools.TestCase):
         sot = security_group.SecurityGroup()
         self.assertEqual('security_group', sot.resource_key)
         self.assertEqual('security_groups', sot.resources_key)
-        self.assertEqual('/%(project_id)s/security-groups', sot.base_path)
-        self.assertEqual('network', sot.service.service_type)
+        self.assertEqual('/security-groups', sot.base_path)
+        self.assertEqual('vpc', sot.service.service_type)
         self.assertTrue(sot.allow_create)
         self.assertTrue(sot.allow_get)
         self.assertFalse(sot.allow_update)
         self.assertTrue(sot.allow_delete)
         self.assertTrue(sot.allow_list)
         self.assertDictEqual(
-            {'limit': 'limit', 'marker': 'marker', 'vpc_id': 'vpc_id'},
+            {'limit': 'limit', 'marker': 'marker', 'vpc_id': 'vpc_id',
+             'enterprise_project_id': 'enterprise_project_id'},
             sot._query_mapping._mapping)
 
     def test_make_it(self):
@@ -64,3 +66,5 @@ class TestSecurityGroup(testtools.TestCase):
         self.assertItemsEqual(EXAMPLE['security_group_rules'],
                               sot.security_group_rules)
         self.assertEqual(dict, type(sot.security_group_rules[0]))
+        self.assertEqual(EXAMPLE['enterprise_project_id'],
+                         sot.enterprise_project_id)

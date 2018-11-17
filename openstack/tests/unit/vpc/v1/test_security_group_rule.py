@@ -17,6 +17,7 @@ from openstack.vpc.v1 import security_group_rule
 IDENTIFIER = 'IDENTIFIER'
 EXAMPLE = {
     "id": "2bc0accf-312e-429a-956e-e4407625eb62",
+    "description": "about the rule",
     "security_group_id": "a7734e61-b545-452d-a3cd-0189cbd9747a",
     "direction": "ingress",
     "ethertype": "IPv4",
@@ -35,8 +36,8 @@ class TestSecurityGroupRule(testtools.TestCase):
         sot = security_group_rule.SecurityGroupRule()
         self.assertEqual('security_group_rule', sot.resource_key)
         self.assertEqual('security_group_rules', sot.resources_key)
-        self.assertEqual('/%(project_id)s/security-group-rules', sot.base_path)
-        self.assertEqual('network', sot.service.service_type)
+        self.assertEqual('/security-group-rules', sot.base_path)
+        self.assertEqual('vpc', sot.service.service_type)
         self.assertTrue(sot.allow_create)
         self.assertTrue(sot.allow_get)
         self.assertFalse(sot.allow_update)
@@ -46,6 +47,7 @@ class TestSecurityGroupRule(testtools.TestCase):
     def test_make_it(self):
         sot = security_group_rule.SecurityGroupRule(**EXAMPLE)
         self.assertEqual(EXAMPLE['id'], sot.id)
+        self.assertEqual(EXAMPLE['description'], sot.description)
         self.assertEqual(EXAMPLE['security_group_id'], sot.security_group_id)
         self.assertEqual(EXAMPLE['direction'], sot.direction)
         self.assertEqual(EXAMPLE['ethertype'], sot.ether_type)

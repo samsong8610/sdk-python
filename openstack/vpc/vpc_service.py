@@ -34,7 +34,7 @@ class VpcServiceV1(service_filter.ServiceFilter):
 
     def __init__(self, version=None):
         """Create a VPC service."""
-        super(VpcService, self).__init__(
+        super(VpcServiceV1, self).__init__(
             service_type='vpc',
             version=version,
             requires_project_id=True

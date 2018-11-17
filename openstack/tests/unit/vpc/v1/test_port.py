@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 import testtools
 
 from openstack.vpc.v1 import port
@@ -51,7 +52,7 @@ class TestPort(testtools.TestCase):
         self.assertEqual('port', sot.resource_key)
         self.assertEqual('ports', sot.resources_key)
         self.assertEqual('/ports', sot.base_path)
-        self.assertEqual('network', sot.service.service_type)
+        self.assertEqual('vpc', sot.service.service_type)
         self.assertTrue(sot.allow_create)
         self.assertTrue(sot.allow_get)
         self.assertTrue(sot.allow_update)
@@ -95,3 +96,11 @@ class TestPort(testtools.TestCase):
                          sot.binding_vif_details)
         self.assertEqual(EXAMPLE['binding:vif_type'], sot.binding_vif_type)
         self.assertEqual(EXAMPLE['binding:vnic_type'], sot.binding_vnic_type)
+
+    def test_get_endpoint_filter(self):
+        sess = mock.Mock()
+        sot = port.Port()
+        sess.get_service.return_value = sot.service
+
+        actual = port.Port.get_endpoint_filter(port.Port, sess)
+        self.assertFalse(actual.get('requires_project_id'))

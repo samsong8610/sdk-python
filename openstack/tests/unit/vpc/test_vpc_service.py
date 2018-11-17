@@ -15,11 +15,24 @@ import testtools
 from openstack.vpc import vpc_service
 
 
-class TestVPCService(testtools.TestCase):
+class TestVpcService(testtools.TestCase):
 
     def test_service(self):
-        sot = vpc_service.VPCService()
-        self.assertEqual('network', sot.service_type)
+        sot = vpc_service.VpcService()
+        self.assertEqual('vpcv2.0', sot.service_type)
+        self.assertEqual('public', sot.interface)
+        self.assertIsNone(sot.region)
+        self.assertIsNone(sot.service_name)
+        self.assertEqual(1, len(sot.valid_versions))
+        self.assertEqual('v2', sot.valid_versions[0].module)
+        self.assertEqual('v2', sot.valid_versions[0].path)
+
+
+class TestVpcServiceV1(testtools.TestCase):
+
+    def test_service(self):
+        sot = vpc_service.VpcServiceV1()
+        self.assertEqual('vpc', sot.service_type)
         self.assertEqual('public', sot.interface)
         self.assertIsNone(sot.region)
         self.assertIsNone(sot.service_name)

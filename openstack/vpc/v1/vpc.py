@@ -17,8 +17,8 @@ from openstack.vpc import vpc_service
 class VPC(resource.Resource):
     resource_key = 'vpc'
     resources_key = 'vpcs'
-    base_path = '/%(project_id)s/vpcs'
-    service = vpc_service.VPCService()
+    base_path = '/vpcs'
+    service = vpc_service.VpcServiceV1()
 
     # capabilities
     allow_create = True
@@ -27,6 +27,8 @@ class VPC(resource.Resource):
     allow_delete = True
     allow_list = True
 
+    _query_mapping = resource.QueryParameters('enterprise_project_id')
+
     #: The range of available subnets in the VPC.
     cidr = resource.Body('cidr')
     #: The status of the VPC. The value can be CREATING, OK, DOWN,
@@ -34,3 +36,5 @@ class VPC(resource.Resource):
     status = resource.Body('status')
     #: The routing rules of the VPC.
     routes = resource.Body('routes')
+    #: The enterprise project id of the VPC.
+    enterprise_project_id = resource.Body('enterprise_project_id')

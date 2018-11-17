@@ -140,6 +140,15 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
         self.assertIsNone(sot.port_id)
         sot.update.assert_called_once_with(self.proxy._session)
 
+    def test_public_ip_update(self):
+        sot = mock.MagicMock()
+        with mock.patch.object(self.proxy,
+                               '_get_resource', return_value=sot) as mock_res:
+            self.proxy.update_public_ip(sot, ip_version=4)
+            mock_res.assert_called_once_with(public_ip.PublicIP, sot)
+        self.assertEqual(4, sot.ip_version)
+        sot.update.assert_called_once_with(self.proxy._session)
+
     def test_public_ip_delete(self):
         self.verify_delete(self.proxy.delete_public_ip,
                            public_ip.PublicIP,
@@ -233,7 +242,7 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
     def test_security_groups(self):
         self.verify_list(self.proxy.security_groups,
                          security_group.SecurityGroup,
-                         paginated=False)
+                         paginated=True)
 
     def test_security_group_rule_create_attrs(self):
         self.verify_create(self.proxy.create_security_group_rule,

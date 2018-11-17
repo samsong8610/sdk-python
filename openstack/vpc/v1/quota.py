@@ -17,8 +17,8 @@ from openstack.vpc import vpc_service
 class Quota(resource.Resource):
     resource_key = 'quota'
     resources_key = 'quotas.resources'
-    base_path = '/%(project_id)s/quotas'
-    service = vpc_service.VPCService()
+    base_path = '/quotas'
+    service = vpc_service.VpcServiceV1()
 
     # capabilities
     allow_get = False
@@ -29,7 +29,9 @@ class Quota(resource.Resource):
     _query_mapping = resource.QueryParameters('type')
 
     # Properties
-    #: The resource type.
+    #: The resource type. Available values include:
+    # vpc, subnet, securityGroup, securityGroupRule, publicIp, vpn, vpngw
+    # vpcPeer, firewall, shareBandwidth, shareBandwidthIP
     type = resource.Body('type')
     #: The number of created network resources.
     used = resource.Body('used')

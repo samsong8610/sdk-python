@@ -17,8 +17,8 @@ from openstack.vpc import vpc_service
 class SecurityGroup(resource.Resource):
     resource_key = 'security_group'
     resources_key = 'security_groups'
-    base_path = '/%(project_id)s/security-groups'
-    service = vpc_service.VPCService()
+    base_path = '/security-groups'
+    service = vpc_service.VpcServiceV1()
 
     # capabilities
     allow_create = True
@@ -27,7 +27,8 @@ class SecurityGroup(resource.Resource):
     allow_delete = True
     allow_list = True
 
-    _query_mapping = resource.QueryParameters('vpc_id')
+    _query_mapping = resource.QueryParameters('vpc_id',
+                                              'enterprise_project_id')
 
     # Properties
     #: The security group name.
@@ -40,3 +41,5 @@ class SecurityGroup(resource.Resource):
     #: :class:`~openstack.vpc.v1.security_group_rule.SecurityGroupRule`
     #: objects. *Type: list*
     security_group_rules = resource.Body('security_group_rules', type=list)
+    #: The enterprise project id of the VPC.
+    enterprise_project_id = resource.Body('enterprise_project_id')

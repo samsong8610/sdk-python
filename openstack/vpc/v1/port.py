@@ -18,7 +18,7 @@ class Port(resource.Resource):
     resource_key = 'port'
     resources_key = 'ports'
     base_path = '/ports'
-    service = vpc_service.VPCService()
+    service = vpc_service.VpcServiceV1()
 
     # capabilities
     allow_create = True
@@ -69,3 +69,9 @@ class Port(resource.Resource):
     #: The type of the bound vNIC.
     # The value can be normal or direct.
     binding_vnic_type = resource.Body('binding:vnic_type')
+
+    @staticmethod
+    def get_endpoint_filter(cls, session):
+        endpoint_filter = super(Port, Port).get_endpoint_filter(cls, session)
+        endpoint_filter['requires_project_id'] = False
+        return endpoint_filter

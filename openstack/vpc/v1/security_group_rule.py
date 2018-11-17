@@ -17,8 +17,8 @@ from openstack.vpc import vpc_service
 class SecurityGroupRule(resource.Resource):
     resource_key = 'security_group_rule'
     resources_key = 'security_group_rules'
-    base_path = '/%(project_id)s/security-group-rules'
-    service = vpc_service.VPCService()
+    base_path = '/security-group-rules'
+    service = vpc_service.VpcServiceV1()
 
     # capabilities
     allow_create = True
@@ -32,6 +32,8 @@ class SecurityGroupRule(resource.Resource):
     # Properties
     #: The security group ID to associate with this security group rule.
     security_group_id = resource.Body('security_group_id')
+    #: The description about this security group rule.
+    description = resource.Body('description')
     #: ``ingress`` or ``egress``: The direction in which the security group
     #: rule is applied. For a compute instance, an ingress security group
     #: rule is applied to incoming ingress traffic for that instance.

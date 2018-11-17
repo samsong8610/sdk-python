@@ -51,12 +51,12 @@ class TestSubnet(testtools.TestCase):
         sot = subnet.Subnet()
         self.assertEqual('subnet', sot.resource_key)
         self.assertEqual('subnets', sot.resources_key)
-        self.assertEqual('/%(project_id)s/subnets', sot.base_path)
-        self.assertEqual('/%(project_id)s/vpcs/%(vpc_id)s/subnets',
+        self.assertEqual('/subnets', sot.base_path)
+        self.assertEqual('/vpcs/%(vpc_id)s/subnets',
                          sot.update_base_path)
-        self.assertEqual('/%(project_id)s/vpcs/%(vpc_id)s/subnets',
+        self.assertEqual('/vpcs/%(vpc_id)s/subnets',
                          sot.delete_base_path)
-        self.assertEqual('network', sot.service.service_type)
+        self.assertEqual('vpc', sot.service.service_type)
         self.assertTrue(sot.allow_create)
         self.assertTrue(sot.allow_get)
         self.assertTrue(sot.allow_update)
@@ -100,7 +100,7 @@ class TestSubnet(testtools.TestCase):
         sot.dnsList = self.subnet_result['subnet']['dnsList']
         sot.update(sess)
 
-        uri = 'uuid/vpcs/%(vpc_id)s/subnets/%(id)s' % EXAMPLE
+        uri = 'vpcs/%(vpc_id)s/subnets/%(id)s' % EXAMPLE
         sess.put.assert_called_once_with(
             uri,
             headers={},
@@ -120,7 +120,7 @@ class TestSubnet(testtools.TestCase):
         sot = subnet.Subnet(**EXAMPLE)
         sot.delete(sess)
 
-        uri = 'uuid/vpcs/%(vpc_id)s/subnets/%(id)s' % EXAMPLE
+        uri = 'vpcs/%(vpc_id)s/subnets/%(id)s' % EXAMPLE
         sess.delete.assert_called_once_with(
             uri,
             headers={'Accept': ''},
@@ -136,6 +136,7 @@ class TestSubnet(testtools.TestCase):
         sess.get.return_value = response
 
         sot = subnet.Subnet(id=IDENTIFIER)
+        sess.get_service.return_value = sot.service
         iter = sot.list_private_ips(sess)
         list(iter)
 
@@ -144,5 +145,6 @@ class TestSubnet(testtools.TestCase):
             endpoint_override=sot.service.get_endpoint_override(),
             endpoint_filter=sot.service,
             headers={'Accept': 'application/json'},
+            microversion=None,
             params={}
         )
