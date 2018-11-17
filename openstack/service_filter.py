@@ -91,7 +91,7 @@ class ServiceFilter(dict):
 
     def __init__(self, service_type, interface=PUBLIC, region=None,
                  service_name=None, version=None, api_version=None,
-                 requires_project_id=False, microversion=None,
+                 requires_project_id=True, microversion=None,
                  min_version=None, max_version=None):
         """Create a service identifier.
 

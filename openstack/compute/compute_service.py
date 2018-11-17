@@ -16,9 +16,11 @@ from openstack import service_filter
 class ComputeService(service_filter.ServiceFilter):
     """The compute service."""
 
-    valid_versions = [service_filter.ValidVersion('v2')]
+    valid_versions = [service_filter.ValidVersion('v2'),
+                      service_filter.ValidVersion('v2.1')]
 
     def __init__(self, version=None):
         """Create a compute service."""
         super(ComputeService, self).__init__(service_type='compute',
-                                             version=version)
+                                             version=version,
+                                             requires_project_id=True)

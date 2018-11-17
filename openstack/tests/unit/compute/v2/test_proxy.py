@@ -610,6 +610,19 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                            input_path_args=[None, value],
                            expected_args=expected_args)
 
+    def test_volume_attachment_delete_force(self):
+        value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
+        method_kwargs = {'is_force': True}
+        expected_args = [volume_attachment.VolumeAttachment, value]
+        expected_kwargs = {'params': {'delete_flag': 1}}
+        self.verify_delete(self.proxy.delete_volume_attachment,
+                           volume_attachment.VolumeAttachment,
+                           False,
+                           input_path_args=['server_id', value],
+                           method_kwargs=method_kwargs,
+                           expected_args=expected_args,
+                           expected_kwargs=expected_kwargs)
+
     def test_server_tags(self):
         self._verify2("openstack.compute.v2.server.Server.list_tags",
                       self.proxy.server_tags,

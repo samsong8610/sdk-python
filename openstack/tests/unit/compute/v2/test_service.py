@@ -68,7 +68,8 @@ class TestService(testtools.TestCase):
             'forced_down': True,
         }
         self.sess.put.assert_called_with(
-            url, endpoint_filter=sot.service, json=body)
+            url, endpoint_filter=sot.service, json=body,
+            endpoint_override=None)
 
     def test_enable(self):
         sot = service.Service(**EXAMPLE)
@@ -82,7 +83,8 @@ class TestService(testtools.TestCase):
             'host': 'host1',
         }
         self.sess.put.assert_called_with(
-            url, endpoint_filter=sot.service, json=body)
+            url, endpoint_filter=sot.service, json=body,
+            endpoint_override=None)
 
     def test_disable(self):
         sot = service.Service(**EXAMPLE)
@@ -96,7 +98,8 @@ class TestService(testtools.TestCase):
             'host': 'host1',
         }
         self.sess.put.assert_called_with(
-            url, endpoint_filter=sot.service, json=body)
+            url, endpoint_filter=sot.service, json=body,
+            endpoint_override=None)
 
     def test_disable_with_reason(self):
         sot = service.Service(**EXAMPLE)
@@ -113,4 +116,5 @@ class TestService(testtools.TestCase):
             'disabled_reason': reason
         }
         self.sess.put.assert_called_with(
-            url, endpoint_filter=sot.service, json=body)
+            url, endpoint_filter=sot.service, json=body,
+            endpoint_override=None)

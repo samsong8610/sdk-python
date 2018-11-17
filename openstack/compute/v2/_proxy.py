@@ -1167,7 +1167,7 @@ class Proxy(proxy2.BaseProxy):
         return self._create(_volume_attachment.VolumeAttachment, **attrs)
 
     def delete_volume_attachment(self, server, volume_attachment,
-                                 ignore_missing=True):
+                                 ignore_missing=True, is_force=False):
         """Delete a volume attachment
 
         :param server: This parameter need to be specified when
@@ -1184,6 +1184,7 @@ class Proxy(proxy2.BaseProxy):
             raised when the volume attachment does not exist.
             When set to ``True``, no exception will be set when
             attempting to delete a nonexistent volume attachment.
+        :param bool is_force: When set to ``True``, detach the volume force.
 
         :returns: ``None``
         """
@@ -1194,10 +1195,16 @@ class Proxy(proxy2.BaseProxy):
         if not volume_attachment.server_id:
             raise exceptions.SDKException(
                 message='The parameter `server` is required')
-
-        self._delete(_volume_attachment.VolumeAttachment,
-                     volume_attachment,
-                     ignore_missing=ignore_missing)
+        if is_force:
+            params = {'delete_flag': 1}
+            self._delete(_volume_attachment.VolumeAttachment,
+                        volume_attachment,
+                        ignore_missing=ignore_missing,
+                        params=params)
+        else:
+            self._delete(_volume_attachment.VolumeAttachment,
+                        volume_attachment,
+                        ignore_missing=ignore_missing)
 
     def get_volume_attachment(self, server, volume_attachment,
                               ignore_missing=True):
