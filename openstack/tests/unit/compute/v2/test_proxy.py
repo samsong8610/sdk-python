@@ -9,6 +9,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#      Huawei has modified this source file.
+#            Copyright 2018 Huawei Technologies Co., Ltd.
+#            Licensed under the Apache License, Version 2.0 (the "License"); you may not
+#            use this file except in compliance with the License. You may obtain a copy of
+#            the License at
+#
+#                http://www.apache.org/licenses/LICENSE-2.0
+#
+#            Unless required by applicable law or agreed to in writing, software
+#            distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#            WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#            License for the specific language governing permissions and limitations under
+#            the License.
 
 import mock
 
@@ -541,30 +554,32 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                       expected_result=['result'])
 
     def test_volume_attachment_get(self):
-        value = volume_attachment.VolumeAttachment(id='IDENTIFIER',
-                                                   server_id='server_id')
+        value = volume_attachment.VolumeAttachment(
+            id='IDENTIFIER', server_id='server_id')
         expected_args = [volume_attachment.VolumeAttachment, value]
         expected_kwargs = {'ignore_missing': True}
         self.verify_get(self.proxy.get_volume_attachment,
                         volume_attachment.VolumeAttachment,
-                        value=[None, value],
+                        value=[value, None],
                         expected_args=expected_args,
                         expected_kwargs=expected_kwargs)
 
     def test_volume_attachment_get_with_server(self):
         value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
-        expected_args = [volume_attachment.VolumeAttachment, value]
+        expected_value = volume_attachment.VolumeAttachment(
+            id='IDENTIFIER', server_id='server_id')
+        expected_args = [volume_attachment.VolumeAttachment, expected_value]
         expected_kwargs = {'ignore_missing': True}
         self.verify_get(self.proxy.get_volume_attachment,
                         volume_attachment.VolumeAttachment,
-                        value=['server_id', value],
+                        value=[value, 'server_id'],
                         expected_args=expected_args,
                         expected_kwargs=expected_kwargs)
 
     def test_volume_attachment_get_exception(self):
         value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
         self.assertRaises(SDKException, self.proxy.get_volume_attachment,
-                          None, value)
+                          value, None)
 
     def test_volume_attachment_create(self):
         method_kwargs = {'volume_id': 'IDENTIFIER',
@@ -580,45 +595,51 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
 
     def test_volume_attachment_delete(self):
         value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
-        expected_args = [volume_attachment.VolumeAttachment, value]
+        expected_value = volume_attachment.VolumeAttachment(
+            id='IDENTIFIER', server_id='server_id')
+        expected_args = [volume_attachment.VolumeAttachment, expected_value]
         self.verify_delete(self.proxy.delete_volume_attachment,
                            volume_attachment.VolumeAttachment,
                            False,
-                           input_path_args=['server_id', value],
+                           input_path_args=[value, 'server_id'],
                            expected_args=expected_args)
 
         value.server_id = 'server_id'
         self.verify_delete(self.proxy.delete_volume_attachment,
                            volume_attachment.VolumeAttachment,
                            False,
-                           input_path_args=[None, value],
+                           input_path_args=[value, None],
                            expected_args=expected_args)
 
     def test_volume_attachment_delete_ignore(self):
         value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
-        expected_args = [volume_attachment.VolumeAttachment, value]
+        expected_value = volume_attachment.VolumeAttachment(
+            id='IDENTIFIER', server_id='server_id')
+        expected_args = [volume_attachment.VolumeAttachment, expected_value]
         self.verify_delete(self.proxy.delete_volume_attachment,
                            volume_attachment.VolumeAttachment,
                            True,
-                           input_path_args=['server_id', value],
+                           input_path_args=[value, 'server_id'],
                            expected_args=expected_args)
 
         value.server_id = 'server_id'
         self.verify_delete(self.proxy.delete_volume_attachment,
                            volume_attachment.VolumeAttachment,
                            True,
-                           input_path_args=[None, value],
+                           input_path_args=[value, None],
                            expected_args=expected_args)
 
     def test_volume_attachment_delete_force(self):
         value = volume_attachment.VolumeAttachment(id='IDENTIFIER')
+        expected_value = volume_attachment.VolumeAttachment(
+            id='IDENTIFIER', server_id='server_id')
         method_kwargs = {'is_force': True}
-        expected_args = [volume_attachment.VolumeAttachment, value]
+        expected_args = [volume_attachment.VolumeAttachment, expected_value]
         expected_kwargs = {'params': {'delete_flag': 1}}
         self.verify_delete(self.proxy.delete_volume_attachment,
                            volume_attachment.VolumeAttachment,
                            False,
-                           input_path_args=['server_id', value],
+                           input_path_args=[value, 'server_id'],
                            method_kwargs=method_kwargs,
                            expected_args=expected_args,
                            expected_kwargs=expected_kwargs)
@@ -631,11 +652,11 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                       expected_args=[self.session],
                       expected_result=[])
 
-    def test_set_server_tags(self):
+    def test_update_server_tags(self):
         args = ['tag1', 'tag2']
         id = "an_id"
         self._verify2("openstack.compute.v2.server.Server.set_tags",
-                      self.proxy.set_server_tags,
+                      self.proxy.update_server_tags,
                       method_args=[id] + args,
                       method_result=server.Server.existing(id=id,
                                                            tags=args),
@@ -644,9 +665,9 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
 
     @mock.patch("openstack.compute.v2.server.Server.list_tags")
     @mock.patch("openstack.compute.v2.server.Server.add_tag")
-    def test_add_server_tag(self, mock_add, mock_list):
+    def test_create_server_tag(self, mock_add, mock_list):
         mock_list.return_value = []
-        self.proxy.add_server_tag("id", "tag1")
+        self.proxy.create_server_tag("id", "tag1")
         mock_add.assert_called_once_with(self.session, "tag1")
         mock_list.assert_called_once_with(self.session)
 

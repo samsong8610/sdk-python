@@ -1,14 +1,15 @@
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Copyright 2018 Huawei Technologies Co.,Ltd.
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+# this file except in compliance with the License.  You may obtain a copy of the
+# License at
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed
+# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations under the License.
 
 from openstack import exceptions
 from openstack import resource2 as resource
@@ -47,7 +48,7 @@ class PublicIP(resource.Resource):
     #: The IP address version, 4 or 6
     ip_version = resource.Body('ip_version', int)
     #: The alternative name for public_ip_address.
-    # Note(samsong8610): We need this attribute because the creation request
+    # Note: We need this attribute because the creation request
     # uses this attribute name.
     ip_address = resource.Body('ip_address')
     #: The name of the elastic IP
@@ -69,7 +70,7 @@ class PublicIP(resource.Resource):
     #: The bandwidth name.
     bandwidth_name = resource.Body('bandwidth_name')
     #: The bandwidth charge mode.
-    # Note(samsong8610): This attribute only exists in the creation request.
+    # Note: This attribute only exists in the creation request.
     bandwidth_charge_mode = resource.Body('bandwidth_charge_mode')
     #: The enterprise project id of the VPC.
     enterprise_project_id = resource.Body('enterprise_project_id')
@@ -94,7 +95,7 @@ class PublicIP(resource.Resource):
         request = self._prepare_request(requires_id=False,
                                         prepend_key=prepend_key,
                                         session=session)
-        # Note(samsong8610): The body for the creation must contain 'publicip',
+        # Note: The body for the creation must contain 'publicip',
         # 'bandwidth' and 'enterprise_project_id' properties. This is not identical
         # to the normal API body pattern.
         bandwidth = {}

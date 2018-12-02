@@ -141,7 +141,7 @@ def from_config(cloud_name=None, cloud_config=None, options=None):
                     version = "v" + version
                 prof.set_version(service, version)
 
-            # NOTE(samsong8610): Setting properties for microversion filtering
+            # NOTE: Setting properties for microversion filtering
             microversion_key = _make_config_key(service, 'microversion')
             microversion = getattr(cloud_config, microversion_key)
             if microversion:

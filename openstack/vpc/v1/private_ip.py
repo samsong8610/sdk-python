@@ -1,14 +1,15 @@
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Copyright 2018 Huawei Technologies Co.,Ltd.
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+# this file except in compliance with the License.  You may obtain a copy of the
+# License at
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed
+# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations under the License.
 
 from openstack import exceptions
 from openstack import resource2 as resource
@@ -19,7 +20,7 @@ class PrivateIP(resource.Resource):
     resource_key = 'privateip'
     resources_key = 'privateips'
     base_path = '/privateips'
-    # Note(samsong8610): The uri for listing is different from base_path
+    # Note: The uri for listing is different from base_path
     list_base_path = '/subnets/%(subnet_id)s/privateips'
     service = vpc_service.VpcServiceV1()
 
@@ -65,7 +66,7 @@ class PrivateIP(resource.Resource):
         request = self._prepare_request(requires_id=False,
                                         prepend_key=prepend_key,
                                         session=session)
-        # Note(samsong8610): The creation request body is a list of private
+        # Note: The creation request body is a list of private
         # ip address objects with 'privateips' as the key. This is not
         # identical to the normal API request.
         # The 'subnet_id' attribute is mandatory in the creation request Body
@@ -88,7 +89,7 @@ class PrivateIP(resource.Resource):
             body = body[self.resource_key]
         if self.resources_key and self.resources_key in body:
             private_ips = body[self.resources_key]
-            # Note(samsong8610): We only support to create private ips one
+            # Note: We only support to create private ips one
             # by one.
             body = private_ips[0] if len(private_ips) > 0 else {}
 

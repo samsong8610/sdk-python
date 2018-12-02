@@ -106,7 +106,7 @@ class Task(cdn_resource.Resource):
         :rtype: :class:`~openstack.cdn.v1.task.Task`
         """
         request = self._prepare_request(requires_id=requires_id)
-        # NOTE(samsong8610): The URL for GET is not standard.
+        # NOTE: The URL for GET is not standard.
         request.uri = utils.urljoin(request.uri, 'detail')
         endpoint_override = self.service.get_endpoint_override()
         response = session.get(request.uri, endpoint_filter=self.service,
@@ -130,7 +130,7 @@ class RefreshTask(Task):
     task_type = resource.Body('taskType')
     #: The type of cache contents to be refreshed.
     #: The value is either 'file' or 'directory'. The default value is 'file'.
-    # NOTE(samsong8610): This attribute is *ONLY* used in requests.
+    # NOTE: This attribute is *ONLY* used in requests.
     type = resource.Body('type')
 
 

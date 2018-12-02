@@ -18,36 +18,33 @@ from openstack.tests.unit import base
 class TestProfile(base.TestCase):
     def test_init(self):
         expected = [
-            'alarming',
             'anti-ddos',
             'auto-scaling',
-            'baremetal',
+            'bms',
             'cdn',
             'cloud-eye',
-            'clustering',
             'compute',
             'cts',
-            'database',
             'dms',
             'dns',
+            'ecs',
+            'ecsv1.1',
+            'evs',
+            'evsv2.1',
             'identity',
             'image',
-            'key-manager',
             'kms',
             'load-balancer',
             'maas',
             'map-reduce',
-            'messaging',
-            'metering',
             'network',
-            'object-store',
             'orchestration',
-            'rds',
-            'rds_os',
+            'rdsv1',
             'smn',
             'volume',
             'volume-backup',
-            'workflowv2'
+            'vpc',
+            'vpcv2.0'
         ]
         prof = profile.Profile()
 
@@ -55,43 +52,45 @@ class TestProfile(base.TestCase):
 
     def test_default_versions(self):
         prof = profile.Profile()
-        self.assertEqual('v1', prof.get_filter('baremetal').version)
-        self.assertEqual('v1', prof.get_filter('clustering').version)
+        # self.assertEqual('v1', prof.get_filter('baremetal').version)
+        # self.assertEqual('v1', prof.get_filter('clustering').version)
         self.assertEqual('v2', prof.get_filter('compute').version)
-        self.assertEqual('v1', prof.get_filter('database').version)
+        # self.assertEqual('v1', prof.get_filter('database').version)
         self.assertEqual('v3', prof.get_filter('identity').version)
         self.assertEqual('v2', prof.get_filter('image').version)
         self.assertEqual('v1', prof.get_filter('load-balancer').version)
-        self.assertEqual('v2', prof.get_filter('network').version)
-        self.assertEqual('v1', prof.get_filter('object-store').version)
+        self.assertEqual('v2.0', prof.get_filter('network').version)
+        # self.assertEqual('v1', prof.get_filter('object-store').version)
         self.assertEqual('v1', prof.get_filter('orchestration').version)
-        self.assertEqual('v1', prof.get_filter('key-manager').version)
-        self.assertEqual('v2', prof.get_filter('metering').version)
+        # self.assertEqual('v1', prof.get_filter('key-manager').version)
+        # self.assertEqual('v2', prof.get_filter('metering').version)
         self.assertEqual('v2', prof.get_filter('volume').version)
-        self.assertEqual('v1', prof.get_filter('messaging').version)
+        # self.assertEqual('v1', prof.get_filter('messaging').version)
+        self.assertEqual('v1', prof.get_filter('vpc').version)
+        self.assertEqual('v2.0', prof.get_filter('vpcv2.0').version)
 
     def test_set(self):
         prof = profile.Profile()
-        prof.set_version('alarming', 'v2')
-        self.assertEqual('v2', prof.get_filter('alarming').version)
-        prof.set_version('baremetal', 'v1')
-        self.assertEqual('v1', prof.get_filter('baremetal').version)
-        prof.set_version('clustering', 'v1')
-        self.assertEqual('v1', prof.get_filter('clustering').version)
+        # prof.set_version('alarming', 'v2')
+        # self.assertEqual('v2', prof.get_filter('alarming').version)
+        # prof.set_version('baremetal', 'v1')
+        # self.assertEqual('v1', prof.get_filter('baremetal').version)
+        # prof.set_version('clustering', 'v1')
+        # self.assertEqual('v1', prof.get_filter('clustering').version)
         prof.set_version('compute', 'v2')
         self.assertEqual('v2', prof.get_filter('compute').version)
-        prof.set_version('database', 'v3')
-        self.assertEqual('v3', prof.get_filter('database').version)
+        # prof.set_version('database', 'v3')
+        # self.assertEqual('v3', prof.get_filter('database').version)
         prof.set_version('identity', 'v4')
         self.assertEqual('v4', prof.get_filter('identity').version)
         prof.set_version('image', 'v5')
         self.assertEqual('v5', prof.get_filter('image').version)
-        prof.set_version('metering', 'v6')
-        self.assertEqual('v6', prof.get_filter('metering').version)
+        # prof.set_version('metering', 'v6')
+        # self.assertEqual('v6', prof.get_filter('metering').version)
         prof.set_version('network', 'v7')
         self.assertEqual('v7', prof.get_filter('network').version)
-        prof.set_version('object-store', 'v8')
-        self.assertEqual('v8', prof.get_filter('object-store').version)
+        # prof.set_version('object-store', 'v8')
+        # self.assertEqual('v8', prof.get_filter('object-store').version)
         prof.set_version('orchestration', 'v9')
         self.assertEqual('v9', prof.get_filter('orchestration').version)
 
@@ -104,8 +103,8 @@ class TestProfile(base.TestCase):
         # This tests that api_version is effective after explicit setting, or
         # else it defaults to None.
         prof = profile.Profile()
-        prof.set_api_version('clustering', '1.2')
-        svc = prof.get_filter('clustering')
+        prof.set_api_version('network', '1.2')
+        svc = prof.get_filter('network')
         self.assertEqual('1.2', svc.api_version)
         svc = prof.get_filter('compute')
         self.assertIsNone(svc.api_version)

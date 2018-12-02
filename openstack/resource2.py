@@ -586,7 +586,7 @@ class Resource(object):
         instance contains a resource_key and prepend_key=True,
         the body will be wrapped in a dict with that key.
 
-        # Note(samsong8610): If the uri contains project_id URI attribute,
+        # Note: If the uri contains project_id URI attribute,
         # replace it with the actual project id which is fetched from session.
 
         Return a _Request object that contains the constructed URI
@@ -864,7 +864,7 @@ class Resource(object):
 
         more_data = True
         query_params = cls._query_mapping._transpose(params)
-        # Note(samsong8610): If the uri contains project_id URI attribute,
+        # Note: If the uri contains project_id URI attribute,
         # replace it with the actual project id.
         uri_attrs = dict(**params)
         if '%(project_id)s' in cls.base_path and session:
@@ -984,7 +984,7 @@ class Resource(object):
         except exceptions.NotFoundException:
             pass
         except exceptions.HttpException as e:
-            # Note(samsong8610): Huawei cloud API raises 400 (Bad Request),
+            # Note: Huawei cloud API raises 400 (Bad Request),
             # we need to ignore it and treat as a 404 (Not Found) response.
             if e.http_status != 400:
                 raise e

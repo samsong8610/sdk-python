@@ -9,6 +9,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#      Huawei has modified this source file.
+#            Copyright 2018 Huawei Technologies Co., Ltd.
+#            Licensed under the Apache License, Version 2.0 (the "License"); you may not
+#            use this file except in compliance with the License. You may obtain a copy of
+#            the License at
+#
+#                http://www.apache.org/licenses/LICENSE-2.0
+#
+#            Unless required by applicable law or agreed to in writing, software
+#            distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#            WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#            License for the specific language governing permissions and limitations under
+#            the License.
 
 from openstack.compute.v2 import availability_zone
 from openstack.compute.v2 import extension
@@ -105,6 +118,18 @@ class Proxy(proxy2.BaseProxy):
                  when no resource can be found.
         """
         return self._get(_flavor.Flavor, flavor)
+
+    def get_flavor_extra_specs(self, flavor):
+        """Retrieve the extra specs of this flavor
+
+        :param flavor: The value can be either the ID of a flavor or a
+                       :class:`~openstack.compute.v2.flavor.Flavor` instance.
+        :returns: A direction of the extra specs
+        :rtype: dict
+        """
+        res = self._get_base_resource(flavor, _flavor.Flavor)
+        result = res.get_extra_specs(self._session)
+        return result
 
     def flavors(self, details=True, **query):
         """Return a generator of flavors
@@ -1166,19 +1191,19 @@ class Proxy(proxy2.BaseProxy):
         attrs.update(server_id=server_id)
         return self._create(_volume_attachment.VolumeAttachment, **attrs)
 
-    def delete_volume_attachment(self, server, volume_attachment,
+    def delete_volume_attachment(self, volume_attachment, server,
                                  ignore_missing=True, is_force=False):
         """Delete a volume attachment
 
+        :param volume_attachment:
+            The value can be either the ID of a volume attachment or a
+            :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
+            instance.
         :param server: This parameter need to be specified when
             VolumeAttachment ID is given as value. It can be either
             the ID of a server or a
             :class:`~openstack.compute.v2.server.Server`
             instance that the attachment belongs to.
-        :param volume_attachment:
-            The value can be either the ID of a volume attachment or a
-            :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
-            instance.
         :param bool ignore_missing: When set to ``False``
             :class:`~openstack.exceptions.ResourceNotFound` will be
             raised when the volume attachment does not exist.
@@ -1206,19 +1231,19 @@ class Proxy(proxy2.BaseProxy):
                         volume_attachment,
                         ignore_missing=ignore_missing)
 
-    def get_volume_attachment(self, server, volume_attachment,
+    def get_volume_attachment(self, volume_attachment, server,
                               ignore_missing=True):
         """Get a single volume attachment
 
+        :param volume_attachment:
+            The value can be the ID of a volume attachment or a
+            :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
+            instance.
         :param server: This parameter need to be specified when
             VolumeAttachment ID is given as value. It can be either
             the ID of a server or a
             :class:`~openstack.compute.v2.server.Server`
             instance that the attachment belongs to.
-        :param volume_attachment:
-            The value can be the ID of a volume attachment or a
-            :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
-            instance.
         :param bool ignore_missing: When set to ``False``
             :class:`~openstack.exceptions.ResourceNotFound` will be
             raised when the volume attachment does not exist.
@@ -1272,7 +1297,7 @@ class Proxy(proxy2.BaseProxy):
         result = _server.Server.existing(id=res.id, tags=tags)
         return result
 
-    def set_server_tags(self, server, *tags):
+    def update_server_tags(self, server, *tags):
         """Replace all tags of the server with the new set of tags
 
         :param server: Either the ID of a server or a
@@ -1289,7 +1314,7 @@ class Proxy(proxy2.BaseProxy):
         result = _server.Server.existing(id=res.id, tags=tags)
         return result
 
-    def add_server_tag(self, server, tag):
+    def create_server_tag(self, server, tag):
         """Add a single tag to the server
 
         :param server: Either the ID of a server or a

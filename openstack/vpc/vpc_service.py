@@ -1,16 +1,15 @@
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Copyright 2018 Huawei Technologies Co.,Ltd.
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+# this file except in compliance with the License.  You may obtain a copy of the
+# License at
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-
-# huawei self dev service from
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed
+# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations under the License.
 
 from openstack import service_filter
 
@@ -25,6 +24,12 @@ class VpcService(service_filter.ServiceFilter):
         super(VpcService, self).__init__(service_type='vpcv2.0',
                                          requires_project_id=True,
                                          version=version)
+
+    def get_service_module(self):
+        # Note: This value will be used as the attribute name in connection
+        # for the _proxy instance. We need to override the method to avoid
+        # the conflict with vpc version v1.
+        return 'vpcv2'
 
 
 class VpcServiceV1(service_filter.ServiceFilter):

@@ -1,14 +1,15 @@
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# Copyright 2018 Huawei Technologies Co.,Ltd.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+# this file except in compliance with the License.  You may obtain a copy of the
+# License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software distributed
+# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations under the License.
 
 from openstack import exceptions
 from openstack import resource2 as resource
@@ -21,7 +22,7 @@ class Subnet(resource.Resource):
     resource_key = 'subnet'
     resources_key = 'subnets'
     base_path = '/subnets'
-    # Note(samsong8610): The path for update and delete requests is different
+    # Note: The path for update and delete requests is different
     # from the base_path
     update_base_path = '/vpcs/%(vpc_id)s/subnets'
     delete_base_path = '/vpcs/%(vpc_id)s/subnets'
@@ -91,7 +92,7 @@ class Subnet(resource.Resource):
 
         request = self._prepare_request(prepend_key=prepend_key,
                                         session=session)
-        # Note(samsong8610): Override the default subnet resource uri
+        # Note: Override the default subnet resource uri
         body_attrs = self._body.attributes
         body_attrs.update(project_id=session.get_project_id())
         uri = self.update_base_path % body_attrs
@@ -122,7 +123,7 @@ class Subnet(resource.Resource):
             raise exceptions.MethodNotSupported(self, "delete")
 
         request = self._prepare_request(session=session)
-        # Note(samsong8610): Override the default subnet resource uri
+        # Note: Override the default subnet resource uri
         body_attrs = self._body.attributes
         body_attrs.update(project_id=session.get_project_id())
         uri = self.delete_base_path % body_attrs

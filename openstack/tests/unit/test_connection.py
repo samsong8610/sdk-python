@@ -9,6 +9,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+#      Huawei has modified this source file.
+#            Copyright 2018 Huawei Technologies Co., Ltd.
+#            Licensed under the Apache License, Version 2.0 (the "License"); you may not
+#            use this file except in compliance with the License. You may obtain a copy of
+#            the License at
+#
+#                http://www.apache.org/licenses/LICENSE-2.0
+#
+#            Unless required by applicable law or agreed to in writing, software
+#            distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#            WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#            License for the specific language governing permissions and limitations under
+#            the License.
 
 import os
 
@@ -131,31 +144,34 @@ class TestConnection(base.TestCase):
         conn = connection.Connection(authenticator=auth, profile=prof)
         self.assertEqual(auth, conn.authenticator)
         self.assertEqual(prof, conn.profile)
-        self.assertEqual('openstack.telemetry.alarm.v2._proxy',
-                         conn.alarm.__class__.__module__)
-        self.assertEqual('openstack.cluster.v1._proxy',
-                         conn.cluster.__class__.__module__)
+        # self.assertEqual('openstack.telemetry.alarm.v2._proxy',
+        #                  conn.alarm.__class__.__module__)
+        # self.assertEqual('openstack.cluster.v1._proxy',
+        #                  conn.cluster.__class__.__module__)
         self.assertEqual('openstack.compute.v2._proxy',
                          conn.compute.__class__.__module__)
-        self.assertEqual('openstack.database.v1._proxy',
-                         conn.database.__class__.__module__)
+        # self.assertEqual('openstack.database.v1._proxy',
+        #                  conn.database.__class__.__module__)
         self.assertEqual('openstack.identity.v3._proxy',
                          conn.identity.__class__.__module__)
         self.assertEqual('openstack.image.v2._proxy',
                          conn.image.__class__.__module__)
-        # TODO(samsong8610): how to load vpc proxy?
         self.assertEqual('openstack.network.v2._proxy',
                          conn.network.__class__.__module__)
-        self.assertEqual('openstack.object_store.v1._proxy',
-                         conn.object_store.__class__.__module__)
+        # self.assertEqual('openstack.object_store.v1._proxy',
+        #                  conn.object_store.__class__.__module__)
         self.assertEqual('openstack.load_balancer.v1._proxy',
                          conn.load_balancer.__class__.__module__)
         self.assertEqual('openstack.orchestration.v1._proxy',
                          conn.orchestration.__class__.__module__)
-        self.assertEqual('openstack.telemetry.v2._proxy',
-                         conn.telemetry.__class__.__module__)
-        self.assertEqual('openstack.workflow.v2._proxy',
-                         conn.workflow.__class__.__module__)
+        # self.assertEqual('openstack.telemetry.v2._proxy',
+        #                  conn.telemetry.__class__.__module__)
+        # self.assertEqual('openstack.workflow.v2._proxy',
+        #                  conn.workflow.__class__.__module__)
+        self.assertEqual('openstack.vpc.v1._proxy',
+                         conn.vpc.__class__.__module__)
+        self.assertEqual('openstack.vpc.v2._proxy',
+                         conn.vpcv2.__class__.__module__)
 
     def _prepare_test_config(self):
         # Create a temporary directory where our test config will live
