@@ -130,6 +130,8 @@ class Server(resource2.Resource, metadata.MetadataMixin, tag.TagMixin):
     is_locked = resource2.Body('locked')
     #: Metadata stored for this server. *Type: dict*
     metadata = resource2.Body('metadata', type=dict)
+    #: A single metadata queried. *Type: dict*
+    meta = resource2.Body('meta', type=dict)
     #: A networks object. Required parameter when there are multiple
     #: networks defined for the tenant. When you do not specify the
     #: networks parameter, the server attaches to the only network

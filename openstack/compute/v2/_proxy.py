@@ -124,9 +124,11 @@ class Proxy(proxy2.BaseProxy):
 
         :param flavor: The value can be either the ID of a flavor or a
                        :class:`~openstack.compute.v2.flavor.Flavor` instance.
-        :returns: A direction of the extra specs
-        :rtype: dict
+        :returns: The extra specs object, which has a attribute named
+                  'extra_specs' and the value dict contains the specs.
         """
+        if isinstance(flavor, dict):
+            flavor = flavor.get('id', None)
         res = self._get_base_resource(flavor, _flavor.Flavor)
         result = res.get_extra_specs(self._session)
         return result
@@ -938,7 +940,7 @@ class Proxy(proxy2.BaseProxy):
         """
         res = self._get_base_resource(server, _server.Server)
         metadata = res.get_metadata(self._session, key=key)
-        result = _server.Server.existing(id=res.id, metadata=metadata)
+        result = _server.Server.existing(id=res.id, **metadata)
         return result
 
     def set_server_metadata(self, server, **metadata):
@@ -959,7 +961,7 @@ class Proxy(proxy2.BaseProxy):
         """
         res = self._get_base_resource(server, _server.Server)
         metadata = res.set_metadata(self._session, **metadata)
-        result = _server.Server.existing(id=res.id, metadata=metadata)
+        result = _server.Server.existing(id=res.id, **metadata)
         return result
 
     def update_server_metadata(self, server, key, value):
@@ -979,7 +981,7 @@ class Proxy(proxy2.BaseProxy):
         """
         res = self._get_base_resource(server, _server.Server)
         updated = res.update_metadata(self._session, key, value)
-        return _server.Server.existing(id=res.id, metadata=updated)
+        return _server.Server.existing(id=res.id, **updated)
 
     def delete_server_metadata(self, server, keys):
         """Delete metadata for a server
@@ -1190,6 +1192,29 @@ class Proxy(proxy2.BaseProxy):
         server_id = resource2.Resource._get_id(server)
         attrs.update(server_id=server_id)
         return self._create(_volume_attachment.VolumeAttachment, **attrs)
+
+    def update_volume_attachment(self, volume_attachment, server,
+                                 **attrs):
+        """update a volume attachment
+
+        :param volume_attachment:
+            The value can be either the ID of a volume attachment or a
+            :class:`~openstack.compute.v2.volume_attachment.VolumeAttachment`
+            instance.
+        :param server: This parameter need to be specified when
+                       VolumeAttachment ID is given as value. It can be
+                       either the ID of a server or a
+                       :class:`~openstack.compute.v2.server.Server`
+                       instance that the attachment belongs to.
+        :returns: ``None``
+        """
+        server_id = self._get_uri_attribute(volume_attachment, server,
+                                            "server_id")
+        volume_attachment = resource2.Resource._get_id(volume_attachment)
+
+        self._update(_volume_attachment.VolumeAttachment,
+                     volume_id=volume_attachment,
+                     server_id=server_id)
 
     def delete_volume_attachment(self, volume_attachment, server,
                                  ignore_missing=True, is_force=False):

@@ -60,7 +60,7 @@ class TestMetadata(testtools.TestCase):
 
         result = sot.get_metadata(sess)
 
-        self.assertEqual(result, self.metadata_result["metadata"])
+        self.assertEqual(result, self.metadata_result)
         sess.get.assert_called_once_with("servers/IDENTIFIER/metadata",
                                          headers={},
                                          endpoint_override=None,
@@ -78,12 +78,23 @@ class TestMetadata(testtools.TestCase):
 
         result = sot.set_metadata(sess, **set_meta)
 
-        self.assertEqual(result, self.metadata_result["metadata"])
+        self.assertEqual(result, self.metadata_result)
         sess.post.assert_called_once_with("servers/IDENTIFIER/metadata",
                                           endpoint_filter=sot.service,
                                           headers={},
                                           endpoint_override=None,
                                           json={"metadata": set_meta})
+
+    def test_set_metadata_none(self):
+        response = mock.Mock()
+        response.json.return_value = self.metadata_result
+        sess = mock.Mock()
+        sess.post.return_value = response
+
+        sot = server.Server(id=IDENTIFIER)
+        result = sot.set_metadata(sess)
+
+        self.assertEqual(result, {'metadata': {}})
 
     def test_delete_metadata(self):
         sess = mock.Mock()
@@ -111,7 +122,7 @@ class TestMetadata(testtools.TestCase):
 
         key = 'oh'
         result = sot.get_metadata(sess, key=key)
-        self.assertEqual(self.meta_result['meta'], result)
+        self.assertEqual(result, self.meta_result)
         sess.get.assert_called_once_with("servers/IDENTIFIER/metadata/" + key,
                                          headers={},
                                          endpoint_override=None,
@@ -129,9 +140,20 @@ class TestMetadata(testtools.TestCase):
         meta = {key: value}
         result = sot.update_metadata(sess, key=key, value=value)
 
-        self.assertEqual(self.meta_result['meta'], result)
+        self.assertEqual(result, self.meta_result)
         sess.put.assert_called_once_with("servers/IDENTIFIER/metadata/" + key,
                                          endpoint_filter=sot.service,
                                          headers={},
                                          endpoint_override=None,
                                          json={"meta": meta})
+
+    def test_update_metadata_by_key_none(self):
+        response = mock.Mock()
+        response.json.return_value = self.meta_result
+        sess = mock.Mock()
+        sess.put.return_value = response
+
+        sot = server.Server(id=IDENTIFIER)
+        result = sot.update_metadata(sess, key=None, value=None)
+
+        self.assertEqual(result, {'meta': {}})

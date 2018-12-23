@@ -72,13 +72,11 @@ class MetadataMixin(object):
         :param key: The key of the metadata to get, if None, return all.
         :type key: str or None
 
-        :returns: A dictionary of the requested metadata. All keys and values
+        :returns: The requested metadata. All keys and values
                   are Unicode text.
-        :rtype: dict
         """
-        resource_key = 'metadata' if key is None else 'meta'
         result = self._metadata(session.get, key=key)
-        return result[resource_key]
+        return result
 
     def set_metadata(self, session, **metadata):
         """Update metadata
@@ -92,15 +90,14 @@ class MetadataMixin(object):
                                 this server instance. All keys and values
                                 are stored as Unicode.
 
-        :returns: A dictionary of the metadata after being updated.
+        :returns: The metadata after being updated.
                   All keys and values are Unicode text.
-        :rtype: dict
         """
         if not metadata:
-            return dict()
+            return {'metadata': {}}
 
         result = self._metadata(session.post, **metadata)
-        return result["metadata"]
+        return result
 
     def update_metadata(self, session, key, value):
         """Creates or replaces a metadata item, by key
@@ -110,15 +107,14 @@ class MetadataMixin(object):
         :param str key: The key of the metadata to update.
         :param str value: The new value of the metadata.
 
-        :returns: A dictionary of the metadata after being updated.
+        :returns: The metadata after being updated.
                   All keys and values are Unicode text.
-        :rtype: dict
         """
         if not key:
-            return dict()
+            return {'meta': {}}
 
         result = self._metadata(session.put, key=key, **{key: value})
-        return result['meta']
+        return result
 
     def delete_metadata(self, session, keys):
         """Delete metadata

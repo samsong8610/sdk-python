@@ -82,6 +82,15 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                          method_kwargs={"details": False, "query": 1},
                          expected_kwargs={"query": 1})
 
+    def test_get_flavor_extra_specs(self):
+        test_flavor = flavor.Flavor(id='flavor_id')
+        self._verify2('openstack.compute.v2.flavor.Flavor.get_extra_specs',
+                      self.proxy.get_flavor_extra_specs,
+                      method_args=[test_flavor],
+                      method_result={'extra_specs': {}},
+                      expected_args=[self.session],
+                      expected_result={'extra_specs': {}})
+
     def test_image_delete(self):
         self.verify_delete(self.proxy.delete_image, image.Image, False)
 
@@ -444,7 +453,17 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                       method_result=server.Server(id="value", metadata={}),
                       expected_args=[self.session],
                       expected_kwargs={"key": None},
-                      expected_result={})
+                      expected_result={'metadata': {}})
+
+    def test_get_single_server_metadata(self):
+        self._verify2("openstack.compute.v2.server.Server.get_metadata",
+                      self.proxy.get_server_metadata,
+                      method_args=["value"],
+                      method_kwargs={'key': 'a'},
+                      method_result=server.Server(id="value", meta={'a': 1}),
+                      expected_args=[self.session],
+                      expected_kwargs={"key": 'a'},
+                      expected_result={'meta': {'a': 1}})
 
     def test_set_server_metadata(self):
         kwargs = {"a": "1", "b": "2"}
@@ -457,19 +476,19 @@ class TestComputeProxy(test_proxy_base2.TestProxyBase):
                                                            metadata=kwargs),
                       expected_args=[self.session],
                       expected_kwargs=kwargs,
-                      expected_result=kwargs)
+                      expected_result={'metadata': kwargs})
 
     def test_update_server_metadata(self):
         key = "key1"
         value = "value1"
-        metadata = {"a": "1", key: value}
+        metadata = {key: value}
         self._verify2("openstack.compute.v2.server.Server.update_metadata",
                       self.proxy.update_server_metadata,
                       method_args=[id, key, value],
                       method_result=server.Server.existing(id=id,
-                                                           metadata=metadata),
+                                                           meta=metadata),
                       expected_args=[self.session, key, value],
-                      expected_result=metadata)
+                      expected_result={'meta': metadata})
 
     def test_delete_server_metadata(self):
         self._verify2("openstack.compute.v2.server.Server.delete_metadata",

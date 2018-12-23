@@ -86,7 +86,7 @@ class Flavor(resource2.Resource):
         url = utils.urljoin(base, self.id, 'os-extra_specs')
         response = session.get(url, endpoint_filter=self.service)
         specs = response.json()
-        return specs.get('extra_specs', {})
+        return specs
 
 
 class FlavorDetail(Flavor):

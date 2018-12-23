@@ -117,6 +117,6 @@ class TestFlavor(testtools.TestCase):
 
         result = sot.get_extra_specs(sess)
 
-        self.assertEqual(result, self.extra_specs["extra_specs"])
+        self.assertEqual(result, self.extra_specs)
         sess.get.assert_called_once_with("flavors/IDENTIFIER/os-extra_specs",
                                          endpoint_filter=sot.service)
