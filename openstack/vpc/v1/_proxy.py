@@ -11,6 +11,7 @@
 # CONDITIONS OF ANY KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations under the License.
 
+from openstack import exceptions
 from openstack import proxy2
 from openstack.vpc.v1 import bandwidth as _bandwidth
 from openstack.vpc.v1 import port as _port
@@ -213,13 +214,23 @@ class Proxy(proxy2.BaseProxy):
         :returns: The updated subnet
         :rtype: :class:`~openstack.vpc.v1.subnet.Subnet`
         """
+        # Note: vpc_id is mandatory for update, could be in subnet object
+        #       or in attrs. Otherwise throw an exception.
+        if isinstance(subnet, _subnet.Subnet):
+            if not subnet.vpc_id:
+                raise exceptions.InvalidRequest(
+                    "subnet.vpc_id must not be empty")
+        elif not attrs.has_key('vpc_id'):
+            raise exceptions.InvalidRequest("kwargs must contains vpc_id")
         return self._update(_subnet.Subnet, subnet, **attrs)
 
-    def delete_subnet(self, subnet, ignore_missing=True):
+    def delete_subnet(self, subnet, vpc_id=None, ignore_missing=True):
         """Delete a subnet
 
         :param subnet: The value can be either the ID of a subnet or a
             :class:`~openstack.vpc.v1.subnet.Subnet` instance.
+        :param vpc_id: The id of VPC the subnet belongs to.
+            Mandatory when the subnet is the ID of a subnet.
         :param bool ignore_missing: When set to ``False``
             :class:`~openstack.exceptions.ResourceNotFound` will be
             raised when the subnet does not exist.
@@ -228,7 +239,16 @@ class Proxy(proxy2.BaseProxy):
 
         :returns: ``None``
         """
-        self._delete(_subnet.Subnet, subnet, ignore_missing=ignore_missing)
+        # Note: vpc_id is mandatory for delete, could be in subnet object
+        #       or kwarg. Otherwise throw an exception.
+        if isinstance(subnet, _subnet.Subnet):
+            if not subnet.vpc_id:
+                raise exceptions.InvalidRequest(
+                    "subnet.vpc_id must not be empty")
+        elif not vpc_id:
+            raise exceptions.InvalidRequest("vpc_id must not be empty")
+        self._delete(_subnet.Subnet, subnet, ignore_missing=ignore_missing,
+                     vpc_id=vpc_id)
 
     def find_subnet(self, name_or_id, ignore_missing=True):
         """Find a single subnet
@@ -312,38 +332,6 @@ class Proxy(proxy2.BaseProxy):
         """
         return self._create(_public_ip.PublicIP, **attrs)
 
-    def bind_public_ip_to_port(self, public_ip, port):
-        """Bind a elastic IP address to a port.
-
-        :param public_ip: The value can be the ID of a elastic ip or a
-            :class:`~openstack.vpc.v1.public_ip.PublicIP`
-            instance.
-        :param port: The ID of a port or a :class:`~openstack.vpc.v1.port.Port`
-            instance to be binded.
-
-        :returns: The updated elastic ip
-        :rtype: :class:`~openstack.vpc.v1.public_ip.PublicIP`
-        """
-        res = self._get_resource(_public_ip.PublicIP, public_ip)
-        res.port_id = port.id if isinstance(port, _port.Port) else port
-        res.update(self._session)
-        return res
-
-    def unbind_public_ip(self, public_ip):
-        """Unbind the elastic ip from a port.
-
-        :param public_ip: The value can be the ID of a elastic ip or a
-            :class:`~openstack.vpc.v1.public_ip.PublicIP`
-            instance.
-
-        :returns: The updated elastic ip
-        :rtype: :class:`~openstack.vpc.v1.public_ip.PublicIP`
-        """
-        res = self._get_resource(_public_ip.PublicIP, public_ip)
-        res.port_id = None
-        res.update(self._session)
-        return res
-
     def update_public_ip(self, public_ip, **attrs):
         """Update the elastic ip
 
@@ -354,14 +342,20 @@ class Proxy(proxy2.BaseProxy):
         :param dict attrs: The attributes to update on the ip represented
             by ``public_ip``. Available attributes include:
 
+            * ``port_id``: The id of the port the public ip binds to.
             * ``ip_version``: The ip address version. The available values
                 includes: 4, 6.
+
+            These two attributes could not be update at the same time.
 
         :returns: The updated elastic ip
         :rtype: :class:`~openstack.vpc.v1.public_ip.PublicIP`
         """
         res = self._get_resource(_public_ip.PublicIP, public_ip)
-        res.ip_version = attrs.get('ip_version')
+        if attrs.has_key('ip_version'):
+            res.ip_version = attrs.get('ip_version')
+        else:
+            res.port_id = attrs.get('port_id', None)
         res.update(self._session)
         return res
 
@@ -448,6 +442,23 @@ class Proxy(proxy2.BaseProxy):
         """
         return self._create(_private_ip.PrivateIP, **attrs)
 
+    def create_private_ips(self, *private_ips):
+        """Create private ips in batch
+
+        :param \*private_ips: A list of dict defined private ip.
+            Available attribute keys are:
+
+            * ``subnet_id``: The ID of the subnet from which the IP address
+                is allocated. Mandatory.
+            * ``ip_address``: The target IP address. The value can be
+                an available IP address in the subnet. If it is not specified,
+                the system automatically assigns an IP address.
+
+        :returns: A list of private IPs
+        :rtype: `list` of :class:`openstack.vpc.v1.private_ip.PrivateIP`
+        """
+        return _private_ip.PrivateIP.batch_create(self._session, private_ips)
+
     def delete_private_ip(self, private_ip, ignore_missing=True):
         """Delete a private ip
 
@@ -465,10 +476,11 @@ class Proxy(proxy2.BaseProxy):
         self._delete(_private_ip.PrivateIP, private_ip,
                      ignore_missing=ignore_missing)
 
-    def find_private_ip(self, name_or_id, ignore_missing=True):
+    def find_private_ip(self, name_or_id, subnet_id, ignore_missing=True):
         """Find a single private IP
 
         :param name_or_id: The name or ID of an IP.
+        :param subnet_id: The id of the subnet in which to find private ip
         :param bool ignore_missing: When set to ``False``
             :class:`~openstack.exceptions.ResourceNotFound` will be
             raised when the resource does not exist.
@@ -478,7 +490,8 @@ class Proxy(proxy2.BaseProxy):
             or None
         """
         return self._find(_private_ip.PrivateIP, name_or_id,
-                          ignore_missing=ignore_missing)
+                          ignore_missing=ignore_missing,
+                          subnet_id=subnet_id)
 
     def ports(self, **query):
         """Return a generator of ports

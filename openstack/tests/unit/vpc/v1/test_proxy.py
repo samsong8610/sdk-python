@@ -14,6 +14,7 @@
 import mock
 import uuid
 
+from openstack import exceptions
 from openstack.tests.unit import test_proxy_base2
 from openstack.vpc.v1 import _proxy
 from openstack.vpc.v1 import bandwidth
@@ -77,10 +78,19 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
         self.verify_create(self.proxy.create_subnet, subnet.Subnet)
 
     def test_subnet_delete(self):
-        self.verify_delete(self.proxy.delete_subnet, subnet.Subnet, False)
+        self.verify_delete(self.proxy.delete_subnet, subnet.Subnet, False,
+                           method_kwargs={'vpc_id': 'vpc_id'})
 
     def test_subnet_delete_ignore(self):
-        self.verify_delete(self.proxy.delete_subnet, subnet.Subnet, True)
+        self.verify_delete(self.proxy.delete_subnet, subnet.Subnet, True,
+                           method_kwargs={'vpc_id': 'vpc_id'})
+
+    def test_subnet_delete_without_vpc_id(self):
+        self.assertRaises(exceptions.InvalidRequest,
+                          self.proxy.delete_subnet, 'id')
+        snet = subnet.Subnet(id='id')
+        self.assertRaises(exceptions.InvalidRequest,
+                          self.proxy.delete_subnet, snet)
 
     def test_subnet_find(self):
         self.verify_find(self.proxy.find_subnet, subnet.Subnet)
@@ -92,7 +102,19 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
         self.verify_list(self.proxy.subnets, subnet.Subnet, paginated=True)
 
     def test_subnet_update(self):
-        self.verify_update(self.proxy.update_subnet, subnet.Subnet)
+        mock_method = 'openstack.proxy2.BaseProxy._update'
+        expected_args = [subnet.Subnet, 'name_or_id']
+        expected_kwargs = {'x': 1, 'y': 2, 'vpc_id': 'vpc_id'}
+        with mock.patch(mock_method) as mocked:
+            self.proxy.update_subnet('name_or_id', **expected_kwargs)
+            mocked.assert_called_once_with(*expected_args, **expected_kwargs)
+
+    def test_subnet_update_without_vpc_id(self):
+        self.assertRaises(exceptions.InvalidRequest,
+                          self.proxy.update_subnet, 'id')
+        snet = subnet.Subnet(id='id')
+        self.assertRaises(exceptions.InvalidRequest,
+                          self.proxy.update_subnet, snet)
 
     def test_public_ips(self):
         self.verify_list(self.proxy.public_ips,
@@ -109,7 +131,7 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
         sot = mock.MagicMock()
         with mock.patch.object(self.proxy,
                                '_get_resource', return_value=sot) as mock_res:
-            self.proxy.bind_public_ip_to_port(IDENTIFIER, 'port_id')
+            self.proxy.update_public_ip(IDENTIFIER, port_id='port_id')
             mock_res.assert_called_once_with(public_ip.PublicIP, IDENTIFIER)
         self.assertEqual('port_id', sot.port_id)
         sot.update.assert_called_once_with(self.proxy._session)
@@ -118,7 +140,7 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
         sot = mock.MagicMock()
         with mock.patch.object(self.proxy,
                                '_get_resource', return_value=sot) as mock_res:
-            self.proxy.bind_public_ip_to_port(sot, 'port_id')
+            self.proxy.update_public_ip(sot, port_id='port_id')
             mock_res.assert_called_once_with(public_ip.PublicIP, sot)
         self.assertEqual('port_id', sot.port_id)
         sot.update.assert_called_once_with(self.proxy._session)
@@ -127,7 +149,7 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
         sot = mock.MagicMock()
         with mock.patch.object(self.proxy,
                                '_get_resource', return_value=sot) as mock_res:
-            self.proxy.unbind_public_ip(IDENTIFIER)
+            self.proxy.update_public_ip(IDENTIFIER)
             mock_res.assert_called_once_with(public_ip.PublicIP, IDENTIFIER)
         self.assertIsNone(sot.port_id)
         sot.update.assert_called_once_with(self.proxy._session)
@@ -136,7 +158,7 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
         sot = mock.MagicMock()
         with mock.patch.object(self.proxy,
                                '_get_resource', return_value=sot) as mock_res:
-            self.proxy.unbind_public_ip(sot)
+            self.proxy.update_public_ip(sot)
             mock_res.assert_called_once_with(public_ip.PublicIP, sot)
         self.assertIsNone(sot.port_id)
         sot.update.assert_called_once_with(self.proxy._session)
@@ -166,6 +188,16 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
     def test_private_ip_create_attrs(self):
         self.verify_create(self.proxy.create_private_ip, private_ip.PrivateIP)
 
+    def test_private_ip_batch_create(self):
+        mock_method = 'openstack.vpc.v1.private_ip.PrivateIP.batch_create'
+        with mock.patch(mock_method) as mocked:
+            priv_ip = private_ip.PrivateIP()
+            mocked.return_value = [priv_ip]
+            req = {'subnet_id': 'id', 'ip_address': 'ip'}
+            result = self.proxy.create_private_ips(req)
+            mocked.assert_called_once_with(self.session, (req,))
+            self.assertEqual(list, type(result))
+
     def test_private_ip_delete(self):
         self.verify_delete(self.proxy.delete_private_ip,
                            private_ip.PrivateIP, False)
@@ -175,7 +207,16 @@ class TestVPCProxy(test_proxy_base2.TestProxyBase):
                            private_ip.PrivateIP, True)
 
     def test_private_ip_find(self):
-        self.verify_find(self.proxy.find_private_ip, private_ip.PrivateIP)
+        mock_method = 'openstack.proxy2.BaseProxy._find'
+        test_method = self.proxy.find_private_ip
+        method_args = ['name_or_id', 'subnet_id', True]
+        expected_args = [private_ip.PrivateIP, 'name_or_id']
+        expected_kwargs = {'ignore_missing': True, 'subnet_id': 'subnet_id'}
+        self._verify2(mock_method, test_method,
+                      method_args=method_args,
+                      expected_args=expected_args,
+                      expected_kwargs=expected_kwargs,
+                      expected_result="result")
 
     def test_private_ip_get(self):
         self.verify_get(self.proxy.get_private_ip, private_ip.PrivateIP)

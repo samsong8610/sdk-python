@@ -102,3 +102,25 @@ class PrivateIP(resource.Resource):
         self._header.attributes.update(headers)
         self._header.clean()
         return self
+
+    @classmethod
+    def batch_create(cls, session, private_ips):
+        """Create the given private ips in batch
+
+        :param session: The session to use for making this request.
+        :type session: :class:`~openstack.session.Session`
+        :param private_ips: A list of dict defined private ip.
+
+        :returns: A list of the created private ips.
+        """
+        uri = cls.base_path
+        body = {'privateips': private_ips}
+        endpoint_override = cls.service.get_endpoint_override()
+        response = session.post(uri, endpoint_filter=cls.service,
+                                endpoint_override=endpoint_override,
+                                json=body)
+        body = response.json()
+        result = []
+        for each in body[cls.resources_key]:
+            result.append(cls.new(**each))
+        return result

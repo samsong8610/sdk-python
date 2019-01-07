@@ -78,3 +78,25 @@ class TestPrivateIP(testtools.TestCase):
             json=expected_body,
             headers={}
         )
+
+    def test_batch_create(self):
+        response = mock.Mock()
+        response.json.return_value = {'privateips': [EXAMPLE]}
+        response.headers = {}
+        sess = mock.Mock()
+        sess.post.return_value = response
+
+        param = ({'subnet_id': 'subnet_id',
+                  'ip_address': '192.168.0.3'},)
+        expected_body = {
+            'privateips': param
+        }
+        result = private_ip.PrivateIP.batch_create(sess, param)
+        clz = private_ip.PrivateIP
+        sess.post.assert_called_once_with(
+            clz.base_path,
+            endpoint_filter=clz.service,
+            endpoint_override=clz.service.get_endpoint_override(),
+            json=expected_body)
+        self.assertEqual(list, type(result))
+        self.assertEqual(1, len(result))
